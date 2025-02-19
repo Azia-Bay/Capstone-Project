@@ -25,8 +25,7 @@ LOCATIONS = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
 
 DISASTER_TYPES = [1, 2, 3, 4, 5]
 
-TRANQUIL_POSITIVE_SENTIMENT_RATIO = 0.9
-DISASTER_POSITIVE_SENTIMENT_RATIO = 0.5
+SENTIMENT_SCORE_RATIO = [0.5, 0.5]
 
 # randomization
 def random_location():
@@ -35,10 +34,8 @@ def random_location():
 def random_disaster_type():
     return choice(DISASTER_TYPES)
 
-def random_sentiment_score(disaster=None):
-    ratio = TRANQUIL_POSITIVE_SENTIMENT_RATIO
-    ratio = DISASTER_POSITIVE_SENTIMENT_RATIO if disaster else ratio
-    return 1 if random() <= ratio else 0
+def random_sentiment_score():
+    return 1 if random() <= SENTIMENT_SCORE_RATIO[0] else 0
 
 # data generation
 def generate_disasters():
@@ -85,43 +82,42 @@ def generate_sample_data(disasters=[]):
     datetime = DATETIME_START
 
     while datetime != DATETIME_END:
-        for i in range(POSTS_PER_MINUTE):
-            # find ongoing disasters
-            ongoing_disasters = []
-            for disaster in disasters:
-                if datetime < disaster["start"] or datetime > disaster["end"]:
-                    continue
+        # find ongoing disasters
+        ongoing_disasters = []
+
+        for disaster in disasters:
+            if datetime >= disaster["start"] and datetime <= disaster["end"]:
                 ongoing_disasters.append(disaster)
-            
-            # choose specific ongoing disaster if multiple
-            disaster = choice(ongoing_disasters) if ongoing_disasters else None
-            
-            # set data row
-            timestamp = str(datetime)
-            location = disaster["location"] if disaster else random_location()
-            text_content = "Lorem ipsum"
-            disaster_type = disaster["type"] if disaster else 0
-            sentiment_score = random_sentiment_score(disaster)
+        
+        if ongoing_disasters:
+            for _i in range(POSTS_PER_MINUTE):
+                # choose specific ongoing disaster if multiple
+                disaster = choice(ongoing_disasters)
+                
+                # set data row
+                data[post_id] = {
+                    "timestamp": str(datetime),
+                    "location": disaster["location"],
+                    "text_content": "Lorem ipsum",
+                    "disaster_type": disaster["type"],
+                    "sentiment_score": random_sentiment_score()}
 
-            data[post_id] = {
-                "timestamp": timestamp,
-                "location": location,
-                "text_content": text_content,
-                "disaster_type": disaster_type,
-                "sentiment_score": sentiment_score}
-
-            # display progress
-            percentage = (tenths + 1) * 0.1
-            if post_id + 1 >= NUM_POSTS * percentage:
-                tenths += 1
-                ellipses = "..." if tenths < 10 else ""
-                print(f"{int(percentage * 100)}% complete {ellipses}")
-            
-            # increment key
-            post_id += 1
+                # increment key
+                post_id += 1
         
         # increment datetime
         datetime += timedelta(minutes=1)
+
+        # display progress
+        percentage = (tenths + 1) * 0.1
+
+        time_elapsed = datetime - DATETIME_START
+        minutes_elapsed = int(time_elapsed.total_seconds() / 60)
+
+        if minutes_elapsed + 1 >= MINUTES_ELAPSED * percentage:
+            tenths += 1
+            ellipses = "..." if tenths < 10 else ""
+            print(f"{int(percentage * 100)}% complete {ellipses}")
     
     return data
 
