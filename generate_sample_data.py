@@ -9,9 +9,7 @@ DATETIME_END = datetime(2025, 1, 1)
 TIME_ELAPSED = DATETIME_END - DATETIME_START
 MINUTES_ELAPSED = int(TIME_ELAPSED.total_seconds() / 60)
 
-POSTS_PER_MINUTE = 5
-
-NUM_POSTS = MINUTES_ELAPSED * POSTS_PER_MINUTE
+MAX_POSTS_PER_MINUTE = 5
 NUM_DISASTERS = 27
 
 DISASTER_DURATION_MINUTES_MIN = int(timedelta(weeks=1).total_seconds() / 60)
@@ -90,7 +88,7 @@ def generate_sample_data(disasters=[]):
                 ongoing_disasters.append(disaster)
         
         if ongoing_disasters:
-            for _i in range(POSTS_PER_MINUTE):
+            for _i in range(MAX_POSTS_PER_MINUTE):
                 # choose specific ongoing disaster if multiple
                 disaster = choice(ongoing_disasters)
                 
