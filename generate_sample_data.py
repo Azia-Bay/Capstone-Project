@@ -12,7 +12,7 @@ MINUTES_ELAPSED = int(TIME_ELAPSED.total_seconds() / 60)
 POSTS_PER_MINUTE = 5
 
 NUM_POSTS = MINUTES_ELAPSED * POSTS_PER_MINUTE
-NUM_DISASTERS = 24
+NUM_DISASTERS = 27
 
 DISASTER_DURATION_MINUTES_MIN = int(timedelta(weeks=1).total_seconds() / 60)
 DISASTER_DURATION_MINUTES_MAX = int(timedelta(weeks=4).total_seconds() / 60)
