@@ -1,0 +1,11 @@
+certifi==2025.1.31
+charset-normalizer==3.4.1
+click==8.1.8
+graphviz==0.20.3
+h11==0.14.0
+idna==3.10
+requests==2.32.3
+urllib3==2.3.0
+uvicorn==0.34.0
+fastapi==0.95.1
+py-mon==2.0.5
