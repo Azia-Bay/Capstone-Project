@@ -3,6 +3,9 @@ import { useState } from "react";
 export default function Home() {
 	const [hoveredPath, setHoveredPath] = useState(null);
 	const [selectedPath, setSelectedPath] = useState(null);
+	const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+	const [startDate, setStartDate] = useState("");
+	const [endDate, setEndDate] = useState("");
 
 	const handleMouseEnter = (id) => {
 		setHoveredPath(id);
@@ -12,9 +15,18 @@ export default function Home() {
 		setHoveredPath(null);
 	};
 
-	const handleMouseClick = () => {
-		setSelectedPath(hoveredPath);
-	};
+	const handleMouseClick = (event, id) => {
+		const stateElement = document.getElementById(id); // Get state by ID
+		if (stateElement) {
+			const bbox = stateElement.getBoundingClientRect(); // Get state's position
+		
+			setSelectedPath(id);
+			setPopupPosition({
+			x: bbox.left + bbox.width / 2 -75, // Center horizontally
+			y: bbox.top - 125, // Position slightly above the state
+			});
+		}
+	};	  
 
 	return (
 		<div className="h-screen w-screen flex flex-col">
@@ -64,7 +76,7 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("MA")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()}
+									onClick={(event) => handleMouseClick(event, "MA")}
 								/>
 								<path
 									id="MN"
@@ -75,7 +87,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("MN")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "MN")}
+								/>
 								<path
 									id="MT"
 									data-name="Montana"
@@ -85,7 +98,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("MT")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "MT")}
+								/>
 								<path
 									id="ND"
 									data-name="North Dakota"
@@ -95,7 +109,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("ND")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "ND")}
+								/>
 								<path
 									id="HI"
 									data-name="Hawaii"
@@ -105,7 +120,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("HI")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "HI")}
+								/>
 								<path
 									id="ID"
 									data-name="Idaho"
@@ -115,7 +131,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("ID")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "ID")}
+								/>
 								<path
 									id="WA"
 									data-name="Washington"
@@ -125,7 +142,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("WA")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "WA")}
+								/>									
 								<path
 									id="AZ"
 									data-name="Arizona"
@@ -135,7 +153,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("AZ")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "AZ")}
+								/>
 								<path
 									id="CA"
 									data-name="California"
@@ -145,7 +164,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("CA")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "CA")}
+								/>	
 								<path
 									id="CO"
 									data-name="Colorado"
@@ -155,7 +175,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("CO")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "CO")}
+								/>	
 								<path
 									id="NV"
 									data-name="Nevada"
@@ -165,7 +186,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("NV")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "NV")}
+								/>	
 								<path
 									id="NM"
 									data-name="New Mexico"
@@ -175,7 +197,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("NM")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "NM")}
+								/>	
 								<path
 									id="OR"
 									data-name="Oregon"
@@ -185,7 +208,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("OR")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "OR")}
+								/>	
 								<path
 									id="UT"
 									data-name="Utah"
@@ -195,7 +219,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("UT")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "UT")}
+								/>	
 								<path
 									id="WY"
 									data-name="Wyoming"
@@ -205,7 +230,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("WY")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "WY")}
+								/>	
 								<path
 									id="AR"
 									data-name="Arkansas"
@@ -215,7 +241,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("AR")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "AR")}
+								/>	
 								<path
 									id="IA"
 									data-name="Iowa"
@@ -225,7 +252,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("IA")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "IA")}
+								/>	
 								<path
 									id="KS"
 									data-name="Kansas"
@@ -235,7 +263,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("KS")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "KS")}
+								/>	
 								<path
 									id="MO"
 									data-name="Missouri"
@@ -245,7 +274,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("MO")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "MO")}
+								/>	
 								<path
 									id="NE"
 									data-name="Nebraska"
@@ -255,7 +285,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("NE")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "NE")}
+								/>	
 								<path
 									id="OK"
 									data-name="Oklahoma"
@@ -265,7 +296,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("OK")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "OK")}
+								/>	
 								<path
 									id="SD"
 									data-name="South Dakota"
@@ -275,7 +307,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("SD")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "SD")}
+								/>	
 								<path
 									id="LA"
 									data-name="Louisiana"
@@ -285,7 +318,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("LA")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "LA")}
+								/>	
 								<path
 									id="TX"
 									data-name="Texas"
@@ -295,7 +329,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("TX")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "TX")}
+								/>	
 								<path
 									id="CT"
 									data-name="Connecticut"
@@ -305,7 +340,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("CT")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "CT")}
+								/>	
 								<path
 									id="NH"
 									data-name="New Hampshire"
@@ -315,7 +351,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("NH")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "NH")}
+								/>	
 								<path
 									id="RI"
 									data-name="Rhode Island"
@@ -325,7 +362,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("RI")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "RI")}
+								/>	
 								<path
 									id="VT"
 									data-name="Vermont"
@@ -335,7 +373,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("VT")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "VT")}
+								/>	
 								<path
 									id="AL"
 									data-name="Alabama"
@@ -345,7 +384,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("AL")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "AL")}
+								/>	
 								<path
 									id="FL"
 									data-name="Florida"
@@ -355,7 +395,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("FL")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "FL")}
+								/>	
 								<path
 									id="GA"
 									data-name="Georgia"
@@ -365,7 +406,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("GA")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "GA")}
+								/>	
 								<path
 									id="MS"
 									data-name="Mississippi"
@@ -375,7 +417,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("MS")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "MS")}
+								/>	
 								<path
 									id="SC"
 									data-name="South Carolina"
@@ -385,7 +428,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("SC")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "SC")}
+								/>	
 								<path
 									id="IL"
 									data-name="Illinois"
@@ -395,7 +439,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("IL")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "IL")}
+								/>	
 								<path
 									id="IN"
 									data-name="Indiana"
@@ -405,7 +450,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("IN")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "IN")}
+								/>	
 								<path
 									id="KY"
 									data-name="Kentucky"
@@ -415,7 +461,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("KY")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "KY")}
+								/>	
 								<path
 									id="NC"
 									data-name="North Carolina"
@@ -425,7 +472,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("NC")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "NC")}
+								/>	
 								<path
 									id="OH"
 									data-name="Ohio"
@@ -435,7 +483,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("OH")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "OH")}
+								/>	
 								<path
 									id="TN"
 									data-name="Tennessee"
@@ -445,7 +494,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("TN")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "TN")}
+								/>	
 								<path
 									id="VA"
 									data-name="Virginia"
@@ -455,7 +505,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("VA")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "VA")}
+								/>	
 								<path
 									id="WI"
 									data-name="Wisconsin"
@@ -465,7 +516,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("WI")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "WI")}
+								/>	
 								<path
 									id="WV"
 									data-name="West Virginia"
@@ -475,7 +527,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("WV")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "WV")}
+								/>	
 								<path
 									id="DE"
 									data-name="Delaware"
@@ -485,7 +538,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("DE")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "DE")}
+								/>	
 								<path
 									id="DC"
 									data-name="District of Columbia"
@@ -495,7 +549,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("DC")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "DC")}
+								/>	
 								<path
 									id="MD"
 									data-name="Maryland"
@@ -505,7 +560,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("MD")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "MD")}
+								/>	
 								<path
 									id="NJ"
 									data-name="New Jersey"
@@ -515,7 +571,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("NJ")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "NJ")}
+								/>	
 								<path
 									id="NY"
 									data-name="New York"
@@ -525,7 +582,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("NY")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "NY")}
+								/>	
 								<path
 									id="PA"
 									data-name="Pennsylvania"
@@ -535,7 +593,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("PA")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "PA")}
+								/>	
 								<path
 									id="ME"
 									data-name="Maine"
@@ -545,7 +604,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("ME")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "ME")}
+								/>	
 								<path
 									id="MI"
 									data-name="Michigan"
@@ -555,7 +615,8 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("MI")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={(event) => handleMouseClick(event, "MI")}
+								/>	
 								<path
 									id="AK"
 									data-name="Alaska"
@@ -565,8 +626,97 @@ export default function Home() {
 									style={{ cursor: "pointer", strokeWidth: "2", fillRule: "evenodd" }}
 									onMouseEnter={() => handleMouseEnter("AK")}
 									onMouseLeave={handleMouseLeave}
-									onClick={() => handleMouseClick()} />
+									onClick={() => setSelectedPath("AK")}
+								/>	
 							</svg>
+							
+							{selectedPath && (
+								<div
+									style={{
+									position: "absolute",
+									left: `${popupPosition.x}px`,
+									top: `${popupPosition.y}px`,
+									backgroundColor: "white",
+									border: "2px solid black",
+									padding: "10px",
+									borderRadius: "8px",
+									boxShadow: "2px 2px 10px rgba(0,0,0,0.3)",
+									maxWidth: "200px",
+									zIndex: 1000,
+									}}
+								>
+									<svg
+									width="30"
+									height="30"
+									style={{
+										position: "absolute",
+										left: "50%",
+										top: "100%",
+										transform: "translateX(-50%)",
+									}}
+									>
+									<line x1="15" y1="0" x2="15" y2="30" stroke="black" strokeWidth="2" />
+									</svg>
+
+									<button
+									onClick={() => setSelectedPath(null)}
+									style={{
+										position: "absolute",
+										top: "5px",
+										right: "5px",
+										backgroundColor: "red",
+										color: "white",
+										border: "none",
+										borderRadius: "50%",
+										width: "20px",
+										height: "20px",
+										cursor: "pointer",
+										fontSize: "14px",
+										fontWeight: "bold",
+									}}
+									>
+									X
+									</button>
+									<h3 style={{ marginBottom: "5px", fontSize: "14px" }}>{selectedPath} Data</h3>
+									<img
+									src={`/GOLD-6487-CareerGuide-Batch04-Images-GraphCharts-02-Bar.jpg`}
+									alt={`Graphb sbdsgfdjhvkd bnkjlfdnbkisvjfnsk jhhrosj oflsugufosdh`}
+									width="100"
+									style={{ borderRadius: "5px" }}
+								/>
+								</div>
+							)}
+						</div>
+						<div style={{ marginTop: "20px", textAlign: "center" }}>
+							<label style={{ marginRight: "10px" }}>
+								Start Date & Time:
+								<input
+								type="datetime-local"
+								value={startDate}
+								onChange={(e) => setStartDate(e.target.value)}
+								style={{
+									marginLeft: "5px",
+									padding: "5px",
+									border: "1px solid black",
+									borderRadius: "5px",
+								}}
+								/>
+							</label>
+
+							<label style={{ marginLeft: "20px" }}>
+								End Date & Time:
+								<input
+								type="datetime-local"
+								value={endDate}
+								onChange={(e) => setEndDate(e.target.value)}
+								style={{
+									marginLeft: "5px",
+									padding: "5px",
+									border: "1px solid black",
+									borderRadius: "5px",
+								}}
+								/>
+							</label>
 						</div>
 					</div>
 				</main>
