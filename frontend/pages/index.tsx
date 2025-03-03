@@ -36,28 +36,29 @@ export default function Home() {
 
 	return (
 		<div className={`h-screen w-screen flex flex-col ${lato.className}`}>
-			<div style={{ display: 'flex', alignItems: 'center' }}>
-				<header className="w-full bg-blue-600 text-white p-4" style={{paddingLeft: '15px'}}>
-					<h1 className="text-xl font-bold" style={{display: 'inline-block'}}>Bluesky Disaster Analytics</h1>
-					<div style={{display: "inline-block", marginLeft: '20px', fontSize: '20px'}}>Powered by AI (Disclaimer)</div>
-					<div style={{display: "inline-block", position: 'absolute', right:'0', marginTop:'35px', marginRight: '20px', fontSize: '20px'}}>Last updated: 10:15 AM (2 minutes ago)</div>
+			/* Header */
+			<div style={{ display: "flex", alignItems: "center" }}>
+				<header className="w-full bg-blue-600 text-white p-4" style={{paddingLeft: "15px"}}>
+					<h1 className="text-xl font-bold" style={{display: "inline-block"}}>Bluesky Disaster Analytics</h1>
+					<div style={{display: "inline-block", marginLeft: "20px", fontSize: "20px"}}>Powered by AI (Disclaimer)</div>
+					<div style={{display: "inline-block", position: "absolute", right:"0", marginTop:"35px", marginRight: "20px", fontSize: "20px"}}>Last updated: 10:15 AM (2 minutes ago)</div>
 				</header>
 			</div>
 
 			<hr/>
 
-			<div className="flex flex-row flex-1" style={{display: "flex", left: '0', paddingLeft: '10px'}}>
-				<aside className="w-64 border-r border-gray-200 p-4 bg-white" style={{paddingLeft: '20px', border: '1px solid black', padding: '10px', height: '600px', width: '206.25px'}}>
+			<div className="flex flex-row flex-1" style={{display: "flex", left: "0", paddingLeft: "10px"}}>
+				<aside className="w-64 border-r border-gray-200 p-4 bg-white" style={{paddingLeft: "20px", border: "1px solid black", padding: "10px", height: "600px", width: "206.25px"}}>
 					<h2 className="font-bold mb-4">Dashboard</h2>
 					<div>Data</div>
 					<div>Models</div>
 					<div>About</div>
 				</aside>
 
-				<main className="flex-1 p-4 bg-white flex flex-col items-center" style={{display: "flex", justifyContent: 'center', width: '925px', height: '50px'}}>
+				<main className="flex-1 p-4 bg-white flex flex-col items-center" style={{display: "flex", justifyContent: "center", width: "925px", height: "50px"}}>
 					<div className="w-full max-w-[800px]">
 						<div className="font-bold"><h2>Disaster Map</h2></div>
-						<div style={{ border: '2px solid black', padding: '10px' }}>
+						<div style={{ border: "2px solid black", padding: "10px" }}>
 							<div>{"Hovered: " + hoveredPath}</div>
 							<div>{"Selected: " + selectedPath}</div>
 							<svg
@@ -727,12 +728,12 @@ export default function Home() {
 					</div>
 				</main>
 
-				<aside className="w-64 border-l border-gray-200 p-4 bg-white" style={{border: '1px solid black', padding: '10px', height: '600px', width: '400px', position: 'absolute', right: '0'}}>
+				<aside className="w-64 border-l border-gray-200 p-4 bg-white" style={{border: "1px solid black", padding: "10px", height: "600px", width: "400px", position: "absolute", right: "0"}}>
 					<h2 className="font-bold mb-4">Latest Disaster Posts Processed</h2>
-					<div style={{border: '1px solid black', padding: '10px'}}>Numerous areas in Fort McMurray region experiencing heavy smoke affecting visibility #ymmfire #yyc</div>
-					<div style={{border: '1px solid black', padding: '10px'}}>RT @SkyNews: Residents of three more Canadian communities forced from their homes after a massive wildfire grew fivefold</div>
-					<div style={{border: '1px solid black', padding: '10px'}}>So proud of my company for donating $50,000 to the Fort McMurray wildfire relief efforts. You can contribute too!</div>
-					<div style={{paddingTop: '5px', textDecoration: 'underline'}}>More</div>
+					<div style={{border: "1px solid black", padding: "10px"}}>Numerous areas in Fort McMurray region experiencing heavy smoke affecting visibility #ymmfire #yyc</div>
+					<div style={{border: "1px solid black", padding: "10px"}}>RT @SkyNews: Residents of three more Canadian communities forced from their homes after a massive wildfire grew fivefold</div>
+					<div style={{border: "1px solid black", padding: "10px"}}>So proud of my company for donating $50,000 to the Fort McMurray wildfire relief efforts. You can contribute too!</div>
+					<div style={{paddingTop: "5px", textDecoration: "underline"}}>More</div>
 				</aside>
 			</div>
 
