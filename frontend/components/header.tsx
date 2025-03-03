@@ -3,12 +3,15 @@ export default function Header() {
         <div
             style={{
                 alignItems: "center",
+                background: "white",
                 borderBottom: "solid 1px #D4DBE2",
                 display: "flex",
                 fontSize: "18px",
                 height: "50px",
                 paddingLeft: "8px",
-                paddingRight: "25px"}}>
+                paddingRight: "25px",
+                position: "fixed",
+                width: "100%"}}>
             <header
                 style={{
                     alignItems: "center",

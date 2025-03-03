@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import Header from "../components/header";
 import Navbar from "../components/navbar";
+import Footer from "../components/footer";
 
 const lato = Lato({
 	subsets: ["latin"],
@@ -39,13 +40,18 @@ export default function Home() {
 	};
 
 	return (
-		<div className={`h-screen w-screen flex flex-col ${lato.className}`}>
+		<div
+			className={`h-screen w-screen flex flex-col ${lato.className}`}
+			style={{minHeight: "125vh"}}>
 			<Header />
 			<Navbar />
 
 			<div
 				className="flex flex-row flex-1"
-				style={{display: "flex", marginLeft: "200px"}}>
+				style={{
+					display: "flex",
+					paddingTop: "50px",
+					marginLeft: "200px"}}>
 				<main className="flex-1 p-4 bg-white flex flex-col items-center" style={{display: "flex", justifyContent: "center", width: "925px", height: "50px"}}>
 					<div className="w-full max-w-[800px]">
 						<div className="font-bold"><h2>Disaster Map</h2></div>
@@ -719,7 +725,7 @@ export default function Home() {
 					</div>
 				</main>
 
-				<aside className="w-64 border-l border-gray-200 p-4 bg-white" style={{border: "1px solid black", padding: "10px", height: "600px", width: "400px", position: "absolute", right: "0"}}>
+				<aside className="w-64 border-l border-gray-200 p-4 bg-white" style={{border: "1px solid black", padding: "10px", height: "600px", width: "400px", marginLeft: "auto", marginRight: "25px", marginTop: "25px"}}>
 					<h2 className="font-bold mb-4">Latest Disaster Posts Processed</h2>
 					<div style={{border: "1px solid black", padding: "10px"}}>Numerous areas in Fort McMurray region experiencing heavy smoke affecting visibility #ymmfire #yyc</div>
 					<div style={{border: "1px solid black", padding: "10px"}}>RT @SkyNews: Residents of three more Canadian communities forced from their homes after a massive wildfire grew fivefold</div>
@@ -727,6 +733,8 @@ export default function Home() {
 					<div style={{paddingTop: "5px", textDecoration: "underline"}}>More</div>
 				</aside>
 			</div>
+
+			<Footer />
 
 			<style jsx global>{`
 				html,

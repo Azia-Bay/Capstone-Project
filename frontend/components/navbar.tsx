@@ -8,9 +8,10 @@ export default function Navbar() {
                 display: "flex",
                 flexDirection: "column",
                 fontSize: "20px",
-                height: "calc(100% - 50px)",
+                height: "100%",
+                marginTop: "50px",
                 padding: "25px",
-                position: "absolute",
+                position: "fixed",
                 rowGap: "8px",
                 width: "200px"}}>
             <Navbutton innerHTML="Dashboard" navPath="/" />
