@@ -36,18 +36,46 @@ export default function Home() {
 
 	return (
 		<div className={`h-screen w-screen flex flex-col ${lato.className}`}>
-			/* Header */
-			<div style={{ display: "flex", alignItems: "center" }}>
-				<header className="w-full bg-blue-600 text-white p-4" style={{paddingLeft: "15px"}}>
-					<h1 className="text-xl font-bold" style={{display: "inline-block"}}>Bluesky Disaster Analytics</h1>
-					<div style={{display: "inline-block", marginLeft: "20px", fontSize: "20px"}}>Powered by AI (Disclaimer)</div>
-					<div style={{display: "inline-block", position: "absolute", right:"0", marginTop:"35px", marginRight: "20px", fontSize: "20px"}}>Last updated: 10:15 AM (2 minutes ago)</div>
+			<div
+				style={{
+					alignItems: "center",
+					borderBottom: "solid 1px #D4DBE2",
+					display: "flex",
+					fontSize: "18px",
+					height: "50px",
+					paddingLeft: "8px",
+					paddingRight: "25px"}}>
+				<header
+					style={{
+						alignItems: "center",
+						display: "flex",
+						flexDirection: "row",
+						width: "100%"}}>
+					<div
+						style={{
+							alignItems: "center",
+							display: "flex",
+							flexDirection: "row",
+							columnGap: "8px"}}>
+						<img
+							src="/favicon.png"
+							alt="Bluesky favicon"
+							style={{width: "35px"}} />
+						<h1 style={{fontSize: "24px", fontWeight: "bold"}}>
+							Bluesky Disaster Analytics
+						</h1>
+						<div>Powered by AI</div>
+						<div style={{textDecoration: "underline"}}>
+							Disclaimer
+						</div>
+					</div>
+					<div style={{marginLeft: "auto"}}>
+						Last updated: 10:15 AM (2 minutes ago)
+					</div>
 				</header>
 			</div>
 
-			<hr/>
-
-			<div className="flex flex-row flex-1" style={{display: "flex", left: "0", paddingLeft: "10px"}}>
+			<div className="flex flex-row flex-1" style={{display: "flex", left: "0", marginTop: "25px", paddingLeft: "10px"}}>
 				<aside className="w-64 border-r border-gray-200 p-4 bg-white" style={{paddingLeft: "20px", border: "1px solid black", padding: "10px", height: "600px", width: "206.25px"}}>
 					<h2 className="font-bold mb-4">Dashboard</h2>
 					<div>Data</div>
