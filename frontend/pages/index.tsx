@@ -1,4 +1,10 @@
+import { Lato } from "next/font/google";
 import { useState } from "react";
+
+const lato = Lato({
+	subsets: ["latin"],
+	weight: ["300", "400"]
+})
 
 export default function Home() {
 	const [hoveredPath, setHoveredPath] = useState(null);
@@ -29,7 +35,7 @@ export default function Home() {
 	};
 
 	return (
-		<div className="h-screen w-screen flex flex-col">
+		<div className={`h-screen w-screen flex flex-col ${lato.className}`}>
 			<div style={{ display: 'flex', alignItems: 'center' }}>
 				<header className="w-full bg-blue-600 text-white p-4" style={{paddingLeft: '15px'}}>
 					<h1 className="text-xl font-bold" style={{display: 'inline-block'}}>Bluesky Disaster Analytics</h1>
@@ -736,16 +742,7 @@ export default function Home() {
 					padding: 0;
 					margin: 0;
 					font-family:
-						-apple-system,
-						BlinkMacSystemFont,
-						Segoe UI,
-						Roboto,
-						Oxygen,
-						Ubuntu,
-						Cantarell,
-						Fira Sans,
-						Droid Sans,
-						Helvetica Neue,
+						var(--font-lato),
 						sans-serif;
 				}
 				* {
