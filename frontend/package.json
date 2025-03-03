@@ -6,11 +6,16 @@
     "start": "next start"
   },
   "dependencies": {
-    "next": "latest",
+    "next": "^15.2.0",
     "react": "latest",
     "react-dom": "latest"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.9",
+    "@types/react": "19.0.10",
+    "typescript": "5.8.2"
   }
 }

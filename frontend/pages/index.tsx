@@ -26,7 +26,7 @@ export default function Home() {
 			y: bbox.top - 125, // Position slightly above the state
 			});
 		}
-	};	  
+	};
 
 	return (
 		<div className="h-screen w-screen flex flex-col">
