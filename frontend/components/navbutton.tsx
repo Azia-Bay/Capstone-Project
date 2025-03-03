@@ -6,8 +6,6 @@ export default function Navbutton({innerHTML, navPath}: any) {
     var fontWeight = navPath == page ? "bold" : "regular";
 
     return (
-        <div className="text" style={{fontWeight: fontWeight}}>
-            {innerHTML}
-        </div>
+        <div className="text" style={{fontWeight: fontWeight}}>{innerHTML}</div>
     );
 }
