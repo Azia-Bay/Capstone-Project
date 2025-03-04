@@ -38,7 +38,7 @@ export default function DisasterMap() {
                 rowGap: "8px",
                 width: "100%"}}>
             <h2 style={{fontSize: "16px", fontWeight: "bold", margin: "0px"}}>
-                Disaster Map
+                Disaster map
             </h2>
             
             <div style={{border: "solid 1px #D4DBE2"}}>

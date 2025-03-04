@@ -48,7 +48,7 @@ export default function Sidebar() {
                         fontSize: "16px",
                         fontWeight: "bold",
                         margin: "0px"}}>
-                    Latest Disaster Posts Processed
+                    Latest disaster posts processed
                 </h2>
 
                 <div
@@ -96,7 +96,7 @@ export default function Sidebar() {
                             fontSize: "16px",
                             fontWeight: "bold",
                             margin: "0px"}}>
-                        Disaster Trend
+                        Disaster trend
                     </h2>
                     
                     <div

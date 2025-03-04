@@ -5,6 +5,7 @@ import Head from "next/head"
 import Header from "../components/header";
 import Navbar from "../components/navbar";
 import DisasterMap from "../components/disaster_map";
+import DisasterList from "../components/disaster_list";
 import Sidebar from "../components/sidebar";
 import Footer from "../components/footer";
 
@@ -30,9 +31,18 @@ export default function Home() {
 					display: "flex",
 					flexDirection: "row",
 					padding: "25px",
+					paddingBottom: "200px",
 					marginLeft: "200px",
 					marginTop: "50px"}}>
-				<DisasterMap />
+				<div
+					style={{
+						display: "flex",
+						flexDirection: "column",
+						rowGap: "25px",
+						width: "100%"}}>
+					<DisasterMap />
+					<DisasterList />
+				</div>
 				<Sidebar />
 			</main>
 			<Footer />
