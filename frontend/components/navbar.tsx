@@ -15,9 +15,10 @@ export default function Navbar() {
                 rowGap: "8px",
                 width: "200px"}}>
             <Navbutton innerHTML="Dashboard" navPath="/" />
-            <Navbutton innerHTML="Data" />
-            <Navbutton innerHTML="Models" />
-            <Navbutton innerHTML="About" />
+            <Navbutton innerHTML="Data" navPath="/data" />
+            <Navbutton innerHTML="Models" navPath="/models" />
+            <Navbutton innerHTML="About" navPath="/about" />
+            <Navbutton innerHTML="Disclaimer" navPath="/disclaimer" />
         </aside>
     );
 }
