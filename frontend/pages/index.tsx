@@ -7,9 +7,8 @@ import Papa from "papaparse";
 
 import Header from "../components/header";
 import Navbar from "../components/navbar";
+import Graph from "../components/graph";
 import Footer from "../components/footer";
-
-import GraphComponent from "./GraphComponent";
 
 const lato = Lato({
 	subsets: ["latin"],
@@ -25,7 +24,7 @@ export default function Home() {
 	const [tweets, setTweets] = useState([]);
 	const [visibleCount, setVisibleCount] = useState(3); // Start with 3 tweets
 
-	const handleMouseEnter = (id) => {
+	const handleMouseEnter = (id: string) => {
 		setHoveredPath(id);
 	};
   
@@ -33,7 +32,7 @@ export default function Home() {
 		setHoveredPath(null);
 	};
 
-	const handleMouseClick = (event, id) => {
+	const handleMouseClick = (_, id: string) => {
 		const stateElement = document.getElementById(id); // Get state by ID
 		if (stateElement) {
 			const bbox = stateElement.getBoundingClientRect(); // Get state's position
@@ -56,9 +55,9 @@ export default function Home() {
 			  skipEmptyLines: true,
 			  complete: function (result) {
 				console.log("Parsed CSV Data:", result.data.slice(0, 10)); // Debugging
-	
-				if (result.data.length > 0 && result.data[0].text) {
-				  setTweets(result.data.map(row => row.text)); // Store all tweets
+				
+				if (result.data.length > 0 && result.data[0]["text"]) {
+				  setTweets(result.data.map(row => row["text"])); // Store all tweets
 				} else {
 				  console.warn("No valid tweets found.");
 				}
@@ -718,7 +717,7 @@ export default function Home() {
 									X
 									</button>
 									<h3 style={{ marginBottom: "5px", fontSize: "14px" }}>{selectedPath} Data</h3>
-									<GraphComponent />
+									<Graph />
 								</div>
 							)}
 						</div>
@@ -757,18 +756,18 @@ export default function Home() {
 				</main>
 
 				<aside className="w-64 border-l border-gray-200 p-4 bg-white"
-					style={{ border: '1px solid black', padding: '10px', height: '600px', width: '400px', position: 'absolute', right: '0' }}>
+					style={{ border: "1px solid black", padding: "10px", height: "600px", width: "400px", position: "absolute", right: "0" }}>
 					<h2 className="font-bold mb-4">Latest Disaster Posts Processed</h2>
 
 					{tweets.slice(0, visibleCount).map((tweet, index) => (
-						<div key={index} style={{ border: '1px solid black', padding: '10px' }}>
+						<div key={index} style={{ border: "1px solid black", padding: "10px" }}>
 						{tweet}
 						</div>
 					))}
 
 					{visibleCount < 8 && (
 						<div 
-						style={{ paddingTop: '5px', textDecoration: 'underline', cursor: 'pointer', color: 'blue' }}
+						style={{ paddingTop: "5px", textDecoration: "underline", cursor: "pointer", color: "blue" }}
 						onClick={loadMoreTweets}
 						>
 						More

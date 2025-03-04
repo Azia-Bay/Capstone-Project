@@ -1,7 +1,7 @@
 import { usePathname } from "next/navigation";
 
 export default function Navbutton({innerHTML, navPath}: any) {
-	var page: String = usePathname().toLowerCase();
+	var page: string = usePathname().toLowerCase();
 
     var fontWeight = navPath == page ? "bold" : "regular";
 

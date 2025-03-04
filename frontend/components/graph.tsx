@@ -6,7 +6,7 @@ import Papa from "papaparse";
 // Register required components
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-export default function GraphComponent() {
+export default function Graph() {
   const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
