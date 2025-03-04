@@ -13,6 +13,7 @@ export default function Navbar() {
                 padding: "25px",
                 position: "fixed",
                 rowGap: "8px",
+                top: "0px",
                 width: "200px"}}>
             <Navbutton innerHTML="Dashboard" navPath="/" />
             <Navbutton innerHTML="Data" navPath="/data" />
