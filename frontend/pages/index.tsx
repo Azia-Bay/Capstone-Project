@@ -1,11 +1,15 @@
 import { Lato } from "next/font/google";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Head from "next/head"
+
+import Papa from "papaparse";
 
 import Header from "../components/header";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
+
+import GraphComponent from "./GraphComponent";
 
 const lato = Lato({
 	subsets: ["latin"],
@@ -18,6 +22,8 @@ export default function Home() {
 	const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 	const [startDate, setStartDate] = useState("");
 	const [endDate, setEndDate] = useState("");
+	const [tweets, setTweets] = useState([]);
+	const [visibleCount, setVisibleCount] = useState(3); // Start with 3 tweets
 
 	const handleMouseEnter = (id) => {
 		setHoveredPath(id);
@@ -34,11 +40,36 @@ export default function Home() {
 		
 			setSelectedPath(id);
 			setPopupPosition({
-			x: bbox.left + bbox.width / 2 -75, // Center horizontally
-			y: bbox.top - 125, // Position slightly above the state
+			x: bbox.left + bbox.width / 2 - 175, // Center horizontally
+			y: bbox.top - 250, // Position slightly above the state
 			});
 		}
 	};
+
+	useEffect(() => {
+		fetch("/preprocessed_data_utf8.csv")
+		  .then(response => response.text())
+		  .then(csvData => {
+			Papa.parse(csvData, {
+			  delimiter: "\t", // Handle tab-separated format
+			  header: true,
+			  skipEmptyLines: true,
+			  complete: function (result) {
+				console.log("Parsed CSV Data:", result.data.slice(0, 10)); // Debugging
+	
+				if (result.data.length > 0 && result.data[0].text) {
+				  setTweets(result.data.map(row => row.text)); // Store all tweets
+				} else {
+				  console.warn("No valid tweets found.");
+				}
+			  },
+			});
+		  });
+	  }, []);
+
+	const loadMoreTweets = () => {
+		setVisibleCount((prevCount) => Math.min(prevCount + 5, 8)); // Load 5 more tweets
+	};	
 
 	return (
 		<div
@@ -650,7 +681,7 @@ export default function Home() {
 									padding: "10px",
 									borderRadius: "8px",
 									boxShadow: "2px 2px 10px rgba(0,0,0,0.3)",
-									maxWidth: "200px",
+									maxWidth: "400px",
 									zIndex: 1000,
 									}}
 								>
@@ -687,12 +718,7 @@ export default function Home() {
 									X
 									</button>
 									<h3 style={{ marginBottom: "5px", fontSize: "14px" }}>{selectedPath} Data</h3>
-									<img
-									src={`/GOLD-6487-CareerGuide-Batch04-Images-GraphCharts-02-Bar.jpg`}
-									alt={`Graphb sbdsgfdjhvkd bnkjlfdnbkisvjfnsk jhhrosj oflsugufosdh`}
-									width="100"
-									style={{ borderRadius: "5px" }}
-								/>
+									<GraphComponent />
 								</div>
 							)}
 						</div>
@@ -730,12 +756,24 @@ export default function Home() {
 					</div>
 				</main>
 
-				<aside className="w-64 border-l border-gray-200 p-4 bg-white" style={{border: "1px solid black", padding: "10px", height: "600px", width: "400px", marginLeft: "auto", marginRight: "25px", marginTop: "25px"}}>
+				<aside className="w-64 border-l border-gray-200 p-4 bg-white"
+					style={{ border: '1px solid black', padding: '10px', height: '600px', width: '400px', position: 'absolute', right: '0' }}>
 					<h2 className="font-bold mb-4">Latest Disaster Posts Processed</h2>
-					<div style={{border: "1px solid black", padding: "10px"}}>Numerous areas in Fort McMurray region experiencing heavy smoke affecting visibility #ymmfire #yyc</div>
-					<div style={{border: "1px solid black", padding: "10px"}}>RT @SkyNews: Residents of three more Canadian communities forced from their homes after a massive wildfire grew fivefold</div>
-					<div style={{border: "1px solid black", padding: "10px"}}>So proud of my company for donating $50,000 to the Fort McMurray wildfire relief efforts. You can contribute too!</div>
-					<div style={{paddingTop: "5px", textDecoration: "underline"}}>More</div>
+
+					{tweets.slice(0, visibleCount).map((tweet, index) => (
+						<div key={index} style={{ border: '1px solid black', padding: '10px' }}>
+						{tweet}
+						</div>
+					))}
+
+					{visibleCount < 8 && (
+						<div 
+						style={{ paddingTop: '5px', textDecoration: 'underline', cursor: 'pointer', color: 'blue' }}
+						onClick={loadMoreTweets}
+						>
+						More
+						</div>
+					)}
 				</aside>
 			</div>
 

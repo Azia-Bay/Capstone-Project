@@ -11,7 +11,8 @@ export default function Header() {
                 paddingLeft: "15px",
                 paddingRight: "25px",
                 position: "fixed",
-                width: "100%"}}>
+                width: "100%",
+                zIndex: "1"}}>
             <header
                 style={{
                     alignItems: "center",
