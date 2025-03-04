@@ -1,6 +1,7 @@
 import { Lato } from "next/font/google";
 
 import { useState } from "react";
+import Head from "next/head"
 
 import Header from "../components/header";
 import Navbar from "../components/navbar";
@@ -43,6 +44,10 @@ export default function Home() {
 		<div
 			className={`h-screen w-screen flex flex-col ${lato.className}`}
 			style={{minHeight: "125vh"}}>
+			<Head>
+				<title>Bluesky Disaster Analytics | Dashboard</title>
+			</Head>
+
 			<Header />
 			<Navbar />
 
