@@ -12,6 +12,7 @@ def read_root():
 
 def locate(text):
     nlp = spacy.load('en_core_web_sm')
+    text = text.upper()
     doc = nlp(text)
     locations = {}
     for item in doc.ents:
