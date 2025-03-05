@@ -30,10 +30,10 @@ export default function Home() {
 					columnGap: "25px",
 					display: "flex",
 					flexDirection: "row",
-					padding: "25px",
-					paddingBottom: "200px",
 					marginLeft: "200px",
-					marginTop: "50px"}}>
+					marginTop: "50px",
+					padding: "25px",
+					paddingBottom: "200px"}}>
 				<div
 					style={{
 						display: "flex",
