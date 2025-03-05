@@ -1,4 +1,51 @@
+import { useState, useEffect } from "react";
+
 export default function Header() {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZoneName: "short",
+    });
+    const parts = formatter.formatToParts(new Date());
+    const timeZonePart = parts.find(p => p.type === "timeZoneName");
+    const timeZoneAbbr = timeZonePart ? timeZonePart.value : "";
+
+    const [clock, setClock] = useState("");
+    const [minutesAgo, setMinutesAgo] = useState(0);
+    const epoch = new Date().getTime();
+
+    useEffect(() => {
+        const start = performance.now();
+        var secondsElapsed = 0;
+        
+        const updateClock = () => {
+            var datetime = new Date(epoch + (performance.now() - start));
+            var localTimeString = datetime.toLocaleTimeString();
+            
+            var time = localTimeString.substring(0, localTimeString.length - 6);
+            var unit = localTimeString.substring(localTimeString.length - 2);
+
+            setClock((prevClock: string) => {
+                var newClock = time + " " + unit + " " + timeZoneAbbr;
+
+                if (secondsElapsed == 0) {
+                    setMinutesAgo(0);
+                    return newClock;
+                }
+
+                if (prevClock && prevClock != newClock) setMinutesAgo(1);
+                else setMinutesAgo(0);
+                return prevClock;
+            });
+
+            secondsElapsed++;
+            secondsElapsed %= 60;
+        };
+
+        updateClock();
+        const interval = setInterval(updateClock, 1000);
+        
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div
             style={{
@@ -49,7 +96,7 @@ export default function Header() {
                     </a>
                 </div>
                 <div style={{marginLeft: "auto"}}>
-                    Last updated: 10:15 AM (2 minutes ago)
+                    Last updated: {clock} ({minutesAgo} minute{minutesAgo === 1 ? "" : "s"} ago)
                 </div>
             </header>
         </div>
