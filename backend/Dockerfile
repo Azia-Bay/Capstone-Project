@@ -6,7 +6,9 @@
 
 # Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
 
-ARG PYTHON_VERSION=3.13.2
+#ARG PYTHON_VERSION=3.13.2
+# Using a more stable Python version since 3.13.2 is not compatible with thinc.
+ARG PYTHON_VERSION=3.9
 FROM python:${PYTHON_VERSION}-slim as base
 
 # Prevents Python from writing pyc files.
@@ -18,6 +20,29 @@ FROM python:${PYTHON_VERSION}-slim as base
 # ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
+
+# Install system dependencies required by spaCy and others
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    libelf-dev \
+    libc6-dev \ 
+    autoconf \
+    automake \
+    wget \
+    python3-dev \
+    libatlas-base-dev \
+    libblas-dev \
+    liblapack-dev \
+    libomp-dev \
+    build-essential \
+    zlib1g-dev \
+    cmake \
+    libssl-dev \
+    ninja-build \
+    git \
+    && rm -rf /var/lib/apt/lists/*  # Clean up to reduce image size
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/go/dockerfile-user-best-practices/
@@ -31,13 +56,20 @@ WORKDIR /app
 #     --uid "${UID}" \
 #     appuser
 
+# Optionally upgrade pip, setuptools, and wheel to avoid issues
+RUN pip install --upgrade pip setuptools wheel
+
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
 # Leverage a bind mount to requirements.txt to avoid having to copy them into
 # into this layer.
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    python -m pip install -r requirements.txt
+    python -m pip install --no-cache-dir -r requirements.txt
+
+# Install spaCy using the --no-cache-dir and -prefer-binary flags and the English model.
+RUN pip install --no-cache-dir --prefer-binary spacy
+RUN python -m spacy download en_core_web_sm
 
 # Switch to the non-privileged user to run the application.
 # USER appuser
