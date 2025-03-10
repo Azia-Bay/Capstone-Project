@@ -10,10 +10,15 @@ export default function Graph() {
   const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
-    fetch("/preprocessed_data_utf8.csv") // Ensure data.csv is in the `public` folder
+    fetch("/preprocessed_data_utf8.csv")
       .then(response => response.text())
       .then(csvData => {
-        Papa.parse(csvData, {
+        interface DataRow {
+          Category: string;
+          Value: number;
+        }
+
+        Papa.parse<DataRow>(csvData, {
           header: true,
           dynamicTyping: true,
           complete: function (result) {
