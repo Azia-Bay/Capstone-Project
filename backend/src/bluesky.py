@@ -7,7 +7,7 @@ class RealTimeData:
     flood_search = ['flood', 'torrent']
     hurricane_search = ['hurricane']
     tornado_search = ['tornado', 'windstorm']
-    wildfire_search = ['wildfire', 'forest fire', 'inferno']
+    wildfire_search = ['wildfire', 'forest fire', 'inferno', 'fire', 'burning']
 
     disaster_map = {1:earthquake_search, 2:flood_search, 3:hurricane_search, 4:tornado_search, 5:wildfire_search}
 
@@ -74,12 +74,12 @@ class RealTimeData:
             posts = posts + self.get_data(i)
         return posts
 
-test = RealTimeData()
+# test = RealTimeData()
 
-with open('data.csv', 'w', newline='') as csvfile:
-    spamwriter = csv.writer(csvfile)
-    spamwriter.writerow(["Blusky Tweets"])
-    for i in range(5):
-        data = test.get_all()
-        for d in data:
-            spamwriter.writerow([d])
+# with open('data.csv', 'w', newline='') as csvfile:
+#     spamwriter = csv.writer(csvfile)
+#     spamwriter.writerow(["Blusky Tweets"])
+#     for i in range(5):
+#         data = test.get_all()
+#         for d in data:
+#             spamwriter.writerow([d])
