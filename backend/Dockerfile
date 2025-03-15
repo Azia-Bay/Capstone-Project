@@ -69,7 +69,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 # Install spaCy using the --no-cache-dir and -prefer-binary flags and the English model.
 RUN pip install --no-cache-dir --prefer-binary spacy
-RUN python -m spacy download en_core_web_sm
+RUN python -m spacy download en_core_web_trf
 
 # Switch to the non-privileged user to run the application.
 # USER appuser
