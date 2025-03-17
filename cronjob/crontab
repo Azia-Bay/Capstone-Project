@@ -1,0 +1,2 @@
+* * * * * root /app/pythonScript.sh
+# new line character required for cron!
