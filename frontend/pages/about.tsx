@@ -27,7 +27,7 @@ export default function About() {
     };
 
     var developers = [
-        new Developer("Azia Bay-Asen", "Team Leader", "https://www.linkedin.com/in/aziabay/", "/pfp_azia.png"),
+        new Developer("Azia Bay-Asen", "Team Leader", "https://www.linkedin.com/in/aziabay/"),
         new Developer("Alex Miller", "Scrum Master", "https://www.linkedin.com/in/alexandra-miller-454b98251/"),
         new Developer("Abbas Khawaja", "Frontend Developer", "https://www.linkedin.com/in/abbas-khawaja/"),
         new Developer("Vikranth Chinnam", "Backend Developer", "https://www.linkedin.com/in/vikranth-chinnam-553a21256/"),
