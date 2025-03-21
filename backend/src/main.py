@@ -264,8 +264,13 @@ async def data_generator():
         for tweet in data:
             # Call Spacy Function to get location.
             print(tweet)
+            result = model.predict(tweet)
+            disaster = result['predicted_class']
+            if disaster == 0:
+                non_disaster_query += f"({tweet}), "
+                continue
             city, state = locate_disaster(tweet, extract_locations(tweet))
-            
+            await sleep(1)
             print(f"I get here {city} {state}")
             if city is None:
                 continue
@@ -277,16 +282,9 @@ async def data_generator():
                 continue
             # Call geopy library to get latitude and longitude
             # Call Model to classify the tweet
-            
-            
-            result = model.predict(tweet)
-            disaster = result['predicted_class']
             print(tweet, latitude, longitude, city, state, disaster)
-            if disaster == 0:
-                non_disaster_query += "({tweet}), "
-            else:
-                disaster_query += f"({tweet}, {disaster}, {state}, {city}, {latitude}, {longitude}), "
-                return_data.append({"tweet":tweet, "disaster":disaster, "state":state, "city":city, "latitude":latitude, "longitude":longitude})
+            disaster_query += f"({tweet}, {disaster}, {state}, {city}, {latitude}, {longitude}), "
+            return_data.append({"tweet":tweet, "disaster":disaster, "state":state, "city":city, "latitude":latitude, "longitude":longitude})
             # append Value to query
         # make an insert call to database
         if disaster_query != "":

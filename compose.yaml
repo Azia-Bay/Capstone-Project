@@ -17,6 +17,7 @@ services:
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
       - TZ=US/Central
+      - MYSQL_ROOT_HOST=%
     expose:
       - 3306
   backend:
