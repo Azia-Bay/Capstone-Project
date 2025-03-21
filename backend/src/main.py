@@ -230,6 +230,9 @@ def get_all_data():
         data.append(temp)
     return data
 
+# @app.get("/datatime")
+
+
 def load_model(model_path):
     model = torch.load(model_path).to(device)
     model.eval() # set the model to evaluation model
@@ -262,9 +265,11 @@ async def data_generator():
             # Call Spacy Function to get location.
             print(tweet)
             city, state = locate_disaster(tweet, extract_locations(tweet))
+            
             print(f"I get here {city} {state}")
             if city is None:
                 continue
+            
             (latitude, longitude) = get_coordinates(location=city)
             if city == state:
                 city = None
@@ -272,10 +277,11 @@ async def data_generator():
                 continue
             # Call geopy library to get latitude and longitude
             # Call Model to classify the tweet
-            print(tweet, latitude, longitude, city, state)
+            
             
             result = model.predict(tweet)
             disaster = result['predicted_class']
+            print(tweet, latitude, longitude, city, state, disaster)
             if disaster == 0:
                 non_disaster_query += "({tweet}), "
             else:
