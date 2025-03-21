@@ -9,4 +9,7 @@ urllib3==2.3.0
 uvicorn==0.34.0
 fastapi==0.95.1
 py-mon==2.0.5
-transformers
+transformers==4.49.0
+geopy==2.4.1
+mysql-connector-python==9.2.0
+torch==2.6.0
