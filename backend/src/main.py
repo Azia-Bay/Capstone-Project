@@ -83,7 +83,7 @@ TABLES ={}
 TABLES['disaster_data'] = (
     "CREATE TABLE `disaster_data` ("
     "   `tweet_id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,"
-    "   `tweet` VARCHAR(500) NOT NULL,"
+    "   `tweet` VARCHAR(1000) NOT NULL,"
     "   `model` enum('1', '2', '3', '4', '5') NOT NULL,"
     "   `state` VARCHAR(100),"
     "   `city` VARCHAR(100),"
@@ -112,7 +112,7 @@ cursor = cnx.cursor()
 def create_database(cursor):
     try:
         cursor.execute(
-            "CREATE DATABASE {} DEFAULT CHARACTER SET 'utf8'".format(DB_NAME))
+            "CREATE DATABASE {} DEFAULT CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_general_ci'".format(DB_NAME))
     except mysql.connector.Error as err:
         print("Failed creating database: {}".format(err))
         exit(1)
@@ -232,6 +232,19 @@ def get_all_data():
 
 # @app.get("/datatime")
 
+@app.get("/nondisaster-data")
+def get_nondisaster_data():
+    cursor.execute("SELECT * FROM non_disaster_data")
+    # gets data in this format [(tweet_id, tweet, model, latitude, longitude, timestamp)]
+    res = cursor.fetchall()
+    
+    data = []
+    for row in res:
+        temp = {}
+        temp["tweet_id"] = row[0]
+        temp["tweet"] = row[1]
+        data.append(temp)
+    return data
 
 def load_model(model_path):
     model = torch.load(model_path).to(device)
@@ -266,8 +279,9 @@ async def data_generator():
             print(tweet)
             result = model.predict(tweet)
             disaster = result['predicted_class']
+            tweet = tweet.replace("'", "\\'")
             if disaster == 0:
-                non_disaster_query += f"({tweet}), "
+                non_disaster_query += f"('{tweet}'), "
                 continue
             city, state = locate_disaster(tweet, extract_locations(tweet))
             await sleep(1)
@@ -291,12 +305,14 @@ async def data_generator():
             disaster_query = disaster_query[:len(disaster_query)-2]
             disaster_query += ";"
             disaster_query = "INSERT INTO `disaster_data` (tweet, model, state, city, latitude, longitude) VALUES " + disaster_query
+            print(disaster_query)
             cursor.execute(disaster_query)
 
         if non_disaster_query != "":
             non_disaster_query = non_disaster_query[:len(non_disaster_query)-2]
             non_disaster_query += ";"
-            non_disaster_query = "INSERT INTO `disaster_data` (tweet) VALUES " + non_disaster_query
+            non_disaster_query = "INSERT INTO `non_disaster_data` (tweet) VALUES " + non_disaster_query
+            print(non_disaster_query)
             cursor.execute(non_disaster_query)
         cnx.commit()
         json_data = json.dumps(return_data)

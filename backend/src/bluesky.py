@@ -56,7 +56,7 @@ class RealTimeData:
                             postDetails += post['embed']['external'].get('title', "") + " "
                             postDetails += post['embed']['external'].get('description', "") + " "
                     postDetails = postDetails.strip()
-                    
+                    postDetails = postDetails[:1000]
                     if postDetails == "":
                         print(post)
                         print("ERROR: NOT GETTING DATA FROM POST")
