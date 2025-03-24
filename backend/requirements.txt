@@ -11,5 +11,6 @@ fastapi==0.95.1
 py-mon==2.0.5
 transformers==4.49.0
 geopy==2.4.1
-mysql-connector-python==9.2.0
+mysql-connector-python==9.0.0
 torch==2.6.0
+numpy==2.0.2

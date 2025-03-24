@@ -12,7 +12,7 @@ class RealTimeData:
     disaster_map = {1:earthquake_search, 2:flood_search, 3:hurricane_search, 4:tornado_search, 5:wildfire_search}
 
     def __init__(self):
-        self.payload = {'q':'', 'limit': 100, 'lang': 'en'}
+        self.payload = {'q':'', 'limit': 10, 'lang': 'en'}
         self.times = {}
     
     def processPosts(self, search_queries, disaster_type):
@@ -56,7 +56,7 @@ class RealTimeData:
                             postDetails += post['embed']['external'].get('title', "") + " "
                             postDetails += post['embed']['external'].get('description', "") + " "
                     postDetails = postDetails.strip()
-                    
+                    postDetails = postDetails[:995]
                     if postDetails == "":
                         print(post)
                         print("ERROR: NOT GETTING DATA FROM POST")
