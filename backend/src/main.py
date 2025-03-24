@@ -97,7 +97,7 @@ TABLES['disaster_data'] = (
 TABLES['non_disaster_data'] = (
     "CREATE TABLE `non_disaster_data` ("
     "   `tweet_id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,"
-    "   `tweet` VARCHAR(500) NOT NULL"
+    "   `tweet` VARCHAR(1000) NOT NULL"
     ") ENGINE=InnoDB;"
 )
 
