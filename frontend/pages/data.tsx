@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Lato } from "next/font/google";
 import Head from "next/head";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import Papa from 'papaparse';
 
 import Header from "../components/header";
 import Navbar from "../components/navbar";
@@ -29,59 +28,63 @@ const disasterLabels = [
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#FF5733'];
 
-// Sample data as fallback if CSV loading fails
-const sampleData: TweetData[] = [
-	{ tweet: "Sample tweet about an earthquake", disasterType: 1 },
-	{ tweet: "Sample tweet about a flood", disasterType: 2 },
-	{ tweet: "Sample tweet about nothing important", disasterType: 0 },
-	{ tweet: "Sample tweet about a hurricane warning", disasterType: 3 },
-	{ tweet: "Sample tweet about tornado damage", disasterType: 4 },
-	{ tweet: "Sample tweet about wildfire evacuation", disasterType: 5 }
-];
-
 export default function Data() {
 	const [data, setData] = useState<TweetData[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				console.log("Attempting to fetch data...");
-				const response = await fetch('/preprocessed_data_utf8.csv');
-				console.log("Fetch response:", response);
-				const csvText = await response.text();
-				console.log("CSV text length:", csvText.length);
-				
-				Papa.parse(csvText, {
-					delimiter: '\t',
-					header: false,
-					skipEmptyLines: true,
-					complete: (results) => {
-						console.log("Parse complete, rows:", results.data.length);
-						const parsedData = results.data.map((row: any) => ({
-							tweet: row[0],
-							disasterType: parseInt(row[1])
-						}));
-						console.log("First few records:", parsedData.slice(0, 3));
-						setData(parsedData);
-						setLoading(false);
-					},
-					error: (error) => {
-						console.error("Papa parse error:", error);
-						setError('Error parsing CSV: ' + error.message);
-						setLoading(false);
-					}
-				});
-			} catch (err) {
-				console.error("Fetch error:", err);
-				console.log("Using sample data instead");
-				setData(sampleData);
+		const setUpStream = async () => {
+			const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+			await sleep(2000);
+			
+			// Create EventSource for SSE endpoint
+			const eventSource = new EventSource('http://localhost:8000/all-data');
+
+			eventSource.onopen = () => {
+				console.log('EventSource connected');
 				setLoading(false);
 			}
-		};
 
-		fetchData();
+			eventSource.addEventListener('newTweets', function (event) {
+				const newTweets: TweetData[] = JSON.parse(event.data);
+				console.log('new tweets:', newTweets);
+				
+				// Update state by appending new tweets
+				setData(prevData => {
+					// Avoid duplicate tweets
+					const uniqueNewTweets = newTweets.filter(
+						newTweet => !prevData.some(
+							existingTweet => 
+								existingTweet.tweet === newTweet.tweet && 
+								existingTweet.disasterType === newTweet.disasterType
+						)
+					);
+					
+					return [...prevData, ...uniqueNewTweets];
+				});
+			});
+
+			// Error handling
+			eventSource.onerror = (error) => {
+				console.error('EventSource failed', error);
+				setError('Failed to connect to tweet stream');
+				eventSource.close();
+				setLoading(false);
+			}
+
+			// Cleanup function to close EventSource
+			return () => {
+				eventSource.close();
+			};
+		}
+
+		const streamSetup = setUpStream();
+		
+		// Cleanup on component unmount
+		return () => {
+			streamSetup.then(cleanup => cleanup && cleanup());
+		};
 	}, []);
 
 	// Calculate disaster type distribution
@@ -147,7 +150,7 @@ export default function Data() {
 			return (
 				<div style={{ padding: '20px' }}>
 					<h1>Data Analysis</h1>
-					<p>Loading disaster tweet data...</p>
+					<p>Waiting for tweets to stream in...</p>
 				</div>
 			);
 		}
