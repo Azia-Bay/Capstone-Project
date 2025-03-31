@@ -4,6 +4,8 @@ import sys
 import uvicorn
 import spacy
 from geopy.geocoders import Nominatim
+from shapely.geometry import Point
+import geopandas as gpd
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import time
@@ -151,6 +153,13 @@ for table_name in TABLES:
 def read_root():
     return {"Hello": "World"}
 
+# Load shapefile for US states
+#us_map = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+us_map = gpd.read_file("/app/src/shapely/ne_110m_admin_1_states_provinces.shp", encoding="utf-8")
+# Only map US
+#us_map = us_map[us_map['iso_a3'] == 'USA']
+us_map = us_map[us_map["admin"] == "United States of America"]
+
 #US states to detect
 state_abbreviations = {
 "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
@@ -235,16 +244,22 @@ def locate_disaster(text, locations):
 def get_coordinates(location):
     loc = Nominatim(user_agent="GetLoc")
     getLoc = loc.geocode(location)
-    #if not getLoc:
-    #    return None, None
+    if getLoc:
+        if is_within_us(getLoc.latitude, getLoc.longitude):
+            return getLoc.latitude, getLoc.longitude
+    return None, None
     #latitude, longitude = getLoc.latitude, getLoc.longitude
     # Reject coordinates outside the US (based on a bounding box)
     #if 24.396308 <= latitude <= 49.384358 and -125.000000 <= longitude <= -66.934570:
         #return latitude, longitude
 
     #return None, None
-    return (getLoc.latitude, getLoc.longitude) if getLoc else None, None
+    #return (getLoc.latitude, getLoc.longitude) if getLoc else None, None
 
+def is_within_us(latitude, longitude):
+    # Check if the coordinates are within the U.S. boundaries.
+    point = Point(longitude, latitude)
+    return us_map.geometry.contains(point).any()
 """
 openai.api_key = os.getenv("OPENAI_API_KEY")
 async def chatgpt_request(prompt):
@@ -373,7 +388,7 @@ async def data_generator():
                 continue
             city, state = locate_disaster(tweet, extract_locations(tweet))
             #city, state = await chat_locate_disaster(tweet)
-            #await sleep(1)
+            await sleep(1)
             print(f"I get here {city} {state}")
             if city is None:
                 continue
@@ -382,8 +397,12 @@ async def data_generator():
             #latitude, longitude = await chat_get_coordinates(city)
             if city == state:
                 city = None
-            #if latitude is None or longitude is None:
-                #continue
+            if latitude is None or longitude is None:
+                continue
+            if city:
+                city = city.replace("\\", "")
+            if state:
+                state = state.replace("\\", "")
             # Call geopy library to get latitude and longitude
             # Call Model to classify the tweet
             print(tweet, latitude, longitude, city, state, disaster)

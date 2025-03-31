@@ -14,3 +14,5 @@ geopy==2.4.1
 mysql-connector-python==9.0.0
 torch==2.6.0
 numpy==2.0.2
+shapely
+geopandas
