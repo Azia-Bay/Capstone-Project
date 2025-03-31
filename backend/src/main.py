@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from bluesky import RealTimeData
-import sys
 import uvicorn
 import spacy
 from geopy.geocoders import Nominatim
@@ -9,61 +8,7 @@ from fastapi.responses import StreamingResponse
 import time
 import mysql.connector
 from mysql.connector import errorcode
-import torch
-import torch.nn as nn
-from predictor import DisasterPredictor
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f"Using device: {device}")
-class LSTMClassifier(nn.Module):
-    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, n_layers, bidirectional, dropout, pad_idx):
-        super().__init__()
-        
-        # Embedding layer
-        self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=pad_idx)
-        
-        # LSTM layer
-        self.lstm = nn.LSTM(embedding_dim, 
-                           hidden_dim, 
-                           num_layers=n_layers, 
-                           bidirectional=bidirectional, 
-                           dropout=dropout if n_layers > 1 else 0,
-                           batch_first=True)
-        
-        # Dropout layer
-        self.dropout = nn.Dropout(dropout)
-        
-        # Fully connected layer
-        fc_input_dim = hidden_dim * 2 if bidirectional else hidden_dim
-        self.fc = nn.Linear(fc_input_dim, output_dim)
-        
-    def forward(self, text):
-        # text shape: [batch size, sentence length]
-        
-        # Generate embeddings
-        embedded = self.embedding(text)  # shape: [batch size, sentence length, embedding dim]
-        
-        # Pass through LSTM
-        output, (hidden, cell) = self.lstm(embedded)
-        
-        # Extract the final forward and backward hidden states if bidirectional
-        if self.lstm.bidirectional:
-            hidden = torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim=1)
-        else:
-            hidden = hidden[-1,:,:]
-        
-        # Apply dropout
-        hidden = self.dropout(hidden)
-        
-        # Pass through linear layer
-        output = self.fc(hidden)
-        
-        return output
-torch.serialization.add_safe_globals([LSTMClassifier])
-torch.serialization.add_safe_globals([nn.Embedding])
-torch.serialization.add_safe_globals([nn.LSTM])
-torch.serialization.add_safe_globals([nn.Dropout])
-torch.serialization.add_safe_globals([nn.Linear])
-import numpy as np
+from predictor import DisasterPredictor, LSTMClassifier
 from asyncio import sleep
 import json
 from transformers import pipeline
@@ -263,6 +208,7 @@ def tokenize(text):
         tokens = tokens[:max_length]
     
     return tokens
+
 model = DisasterPredictor(model_dir="/app/src/disaster_model")
 real_time = RealTimeData()
 async def data_generator():
@@ -320,14 +266,6 @@ async def data_generator():
         yield f"event: newTweets\ndata: {json_data}\n\n"
         await sleep(60)
 
-async def waypoints_generator():
-    waypoints = [{"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249}]
-    # waypoints = json.load(waypoints)
-    for waypoint in waypoints[0: 10]:
-        print(f"{waypoint}")
-        data = json.dumps(waypoint)
-        yield f"event: newTweets\ndata: {data}\n\n"
-        await sleep(1)
 @app.get("/stream")
 async def stream():
     return StreamingResponse(data_generator(), media_type="text/event-stream")
@@ -336,53 +274,5 @@ async def stream():
 def get_real_time_data():
     pass
 
-
-
-
-# @app.post("/process-data")
-# def process_data():
-#     print("I get hit")
-#     # get real time tweets
-#     data = real_time.get_all()
-   
-#     disaster_query = "" # INSERT INTO tbl_name (a,b,c) VALUES
-#     non_disaster_query = "" 
-#     for tweet in data:
-#         # Call Spacy Function to get location.
-#         location = locate(tweet)
-#         if location is None:
-#             continue
-#         (latitude, longitude) = coordinates(location=location)
-#         print(tweet, latitude, longitude)
-#         if latitude is None or longitude is None:
-#             continue
-#         # Call geopy library to get latitude and longitude
-#         # Call Model to classify the tweet
-#         disaster = model(tweet)
-#         if disaster == 0:
-#             non_disaster_query += "({tweet}), "
-#         else:
-#             disaster_query += "({tweet}, {disaster}, {latitude}, {longitude}), "
-#         # append Value to query
-#     # make an insert call to database
-#     if disaster_query != "":
-#         disaster_query = disaster_query[:len(disaster_query)-2]
-#         disaster_query += ";"
-#         disaster_query = "INSERT INTO `disaster_data` (tweet, model, latitude, longitude) VALUES " + disaster_query
-#         cursor.execute(disaster_query)
-
-#     if non_disaster_query != "":
-#         non_disaster_query = non_disaster_query[:len(non_disaster_query)-2]
-#         non_disaster_query += ";"
-#         non_disaster_query = "INSERT INTO `disaster_data` (tweet) VALUES " + non_disaster_query
-#         cursor.execute(non_disaster_query)
-#     cnx.commit()
-    
-#     return 201
-
 if __name__ == "__main__":
-    # cron = CronTab(user="root")
-    # job = cron.new(command='python /app/src/call_process_data.py')
-    # job.minute.every(1)
-    # cron.write()
     uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="info")
