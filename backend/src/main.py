@@ -11,65 +11,10 @@ import time
 import mysql.connector
 from mysql.connector import errorcode
 
-import torch
-import torch.nn as nn
 import json
-import asyncio
+from asyncio import sleep
 import os
 import re
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f"Using device: {device}")
-class LSTMClassifier(nn.Module):
-    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, n_layers, bidirectional, dropout, pad_idx):
-        super().__init__()
-        
-        # Embedding layer
-        self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=pad_idx)
-        
-        # LSTM layer
-        self.lstm = nn.LSTM(embedding_dim, 
-                           hidden_dim, 
-                           num_layers=n_layers, 
-                           bidirectional=bidirectional, 
-                           dropout=dropout if n_layers > 1 else 0,
-                           batch_first=True)
-        
-        # Dropout layer
-        self.dropout = nn.Dropout(dropout)
-        
-        # Fully connected layer
-        fc_input_dim = hidden_dim * 2 if bidirectional else hidden_dim
-        self.fc = nn.Linear(fc_input_dim, output_dim)
-        
-    def forward(self, text):
-        # text shape: [batch size, sentence length]
-        
-        # Generate embeddings
-        embedded = self.embedding(text)  # shape: [batch size, sentence length, embedding dim]
-        
-        # Pass through LSTM
-        output, (hidden, cell) = self.lstm(embedded)
-        
-        # Extract the final forward and backward hidden states if bidirectional
-        if self.lstm.bidirectional:
-            hidden = torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim=1)
-        else:
-            hidden = hidden[-1,:,:]
-        
-        # Apply dropout
-        hidden = self.dropout(hidden)
-        
-        # Pass through linear layer
-        output = self.fc(hidden)
-        
-        return output
-torch.serialization.add_safe_globals([LSTMClassifier])
-torch.serialization.add_safe_globals([nn.Embedding])
-torch.serialization.add_safe_globals([nn.LSTM])
-torch.serialization.add_safe_globals([nn.Dropout])
-torch.serialization.add_safe_globals([nn.Linear])
-import numpy as np
 from predictor import DisasterPredictor, LSTMClassifier
 from asyncio import sleep
 import json
@@ -218,6 +163,18 @@ def classify_relevant_state(text, locations):
 def locate_disaster(text, locations):
     if not locations:
         return None, None
+
+    #US states to detect
+    us_states = {
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
+    "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+    "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
+    "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+    "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
+    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
+    "Wisconsin", "Wyoming"
+    }
     
     #Get the most mentioned location
     if len(locations) > 1:
@@ -327,9 +284,11 @@ def get_all_data():
         temp["tweet_id"] = row[0]
         temp["tweet"] = row[1]
         temp["model"] = row[2]
-        temp["latitude"] = row[3]
-        temp["longitude"] = row[4]
-        temp["timestamp"] = row[5]
+        temp["state"] = row[3]
+        temp["city"] = row[4]
+        temp["latitude"] = row[5]
+        temp["longitude"] = row[6]
+        temp["timestamp"] = row[7]
         data.append(temp)
     return data
 
@@ -393,8 +352,8 @@ async def data_generator():
             print(f"I get here {city} {state}")
             # if city is None:
             #     continue
-            
-            (latitude, longitude) = get_coordinates(location=city)
+            coordinates = get_coordinates(location=city)
+            latitude, longitude = coordinates[0], coordinates[1]
             #latitude, longitude = await chat_get_coordinates(city)
             if city == state:
                 city = None
@@ -406,8 +365,12 @@ async def data_generator():
                 state = state.replace("\\", "")
             # Call geopy library to get latitude and longitude
             # Call Model to classify the tweet
+            if city:
+                city = city.replace("\\", "")
+            if state:
+                state = state.replace("\\", "")
             print(tweet, latitude, longitude, city, state, disaster)
-            disaster_query += f"('{tweet}', {disaster}, {state}, {city}, {latitude}, {longitude}), "
+            disaster_query += f"('{tweet}', {disaster}, '{state}', '{city}', '{latitude}', '{longitude}'), "
             return_data.append({"tweet":tweet, "disaster":disaster, "state":state, "city":city, "latitude":latitude, "longitude":longitude})
             # append Value to query
         # make an insert call to database
