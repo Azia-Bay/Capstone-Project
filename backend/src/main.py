@@ -8,6 +8,66 @@ from fastapi.responses import StreamingResponse
 import time
 import mysql.connector
 from mysql.connector import errorcode
+
+import torch
+import torch.nn as nn
+import json
+import asyncio
+import os
+import re
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
+class LSTMClassifier(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, n_layers, bidirectional, dropout, pad_idx):
+        super().__init__()
+        
+        # Embedding layer
+        self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=pad_idx)
+        
+        # LSTM layer
+        self.lstm = nn.LSTM(embedding_dim, 
+                           hidden_dim, 
+                           num_layers=n_layers, 
+                           bidirectional=bidirectional, 
+                           dropout=dropout if n_layers > 1 else 0,
+                           batch_first=True)
+        
+        # Dropout layer
+        self.dropout = nn.Dropout(dropout)
+        
+        # Fully connected layer
+        fc_input_dim = hidden_dim * 2 if bidirectional else hidden_dim
+        self.fc = nn.Linear(fc_input_dim, output_dim)
+        
+    def forward(self, text):
+        # text shape: [batch size, sentence length]
+        
+        # Generate embeddings
+        embedded = self.embedding(text)  # shape: [batch size, sentence length, embedding dim]
+        
+        # Pass through LSTM
+        output, (hidden, cell) = self.lstm(embedded)
+        
+        # Extract the final forward and backward hidden states if bidirectional
+        if self.lstm.bidirectional:
+            hidden = torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim=1)
+        else:
+            hidden = hidden[-1,:,:]
+        
+        # Apply dropout
+        hidden = self.dropout(hidden)
+        
+        # Pass through linear layer
+        output = self.fc(hidden)
+        
+        return output
+torch.serialization.add_safe_globals([LSTMClassifier])
+torch.serialization.add_safe_globals([nn.Embedding])
+torch.serialization.add_safe_globals([nn.LSTM])
+torch.serialization.add_safe_globals([nn.Dropout])
+torch.serialization.add_safe_globals([nn.Linear])
+import numpy as np
 from predictor import DisasterPredictor, LSTMClassifier
 from asyncio import sleep
 import json
@@ -91,16 +151,49 @@ for table_name in TABLES:
 def read_root():
     return {"Hello": "World"}
 
+#US states to detect
+state_abbreviations = {
+"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
+"CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
+"HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa",
+"KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+"MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi",
+"MO": "Missouri", "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire",
+"NJ": "New Jersey", "NM": "New Mexico", "NY": "New York", "NC": "North Carolina",
+"ND": "North Dakota", "OH": "Ohio", "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania",
+"RI": "Rhode Island", "SC": "South Carolina", "SD": "South Dakota", "TN": "Tennessee",
+"TX": "Texas", "UT": "Utah", "VT": "Vermont", "VA": "Virginia", "WA": "Washington",
+"WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming"
+}
+
+us_states = set(state_abbreviations.values())
+
+def extract_hashtags(text):
+    # Extracts potential location names from hashtags.
+    return [tag[1:] for tag in re.findall(r"#\w+", text)]
+
 # takes in a argument of text and returns an Optional max_gpe
 def extract_locations(text):
     nlp = spacy.load('en_core_web_trf')
 
-    text = text.upper()
+    #text = text.upper()
     doc = nlp(text)
     locations = {}
     for item in doc.ents:
         if item.label_ == 'GPE':
-            locations[item.text] = locations.get(item.text, 0) + 1
+            #locations[item.text] = locations.get(item.text, 0) + 1
+            # Convert state abbreviations
+            loc_name = state_abbreviations.get(item.text, item.text) 
+            locations[loc_name] = locations.get(loc_name, 0) + 1
+    # Check hashtags for locations
+    hashtags = extract_hashtags(text)
+    for tag in hashtags:
+        tag_doc = nlp(tag)
+        for entity in tag_doc.ents:
+            if entity.label_ == "GPE":
+                loc_name = state_abbreviations.get(entity.text, entity.text)
+                locations[loc_name] = locations.get(loc_name, 0) + 1
+
     return locations if locations else None
     
 def classify_relevant_state(text, locations):
@@ -116,18 +209,6 @@ def classify_relevant_state(text, locations):
 def locate_disaster(text, locations):
     if not locations:
         return None, None
-
-    #US states to detect
-    us_states = {
-    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
-    "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-    "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
-    "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-    "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
-    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
-    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
-    "Wisconsin", "Wyoming"
-    }
     
     #Get the most mentioned location
     if len(locations) > 1:
@@ -154,8 +235,70 @@ def locate_disaster(text, locations):
 def get_coordinates(location):
     loc = Nominatim(user_agent="GetLoc")
     getLoc = loc.geocode(location)
+    #if not getLoc:
+    #    return None, None
+    #latitude, longitude = getLoc.latitude, getLoc.longitude
+    # Reject coordinates outside the US (based on a bounding box)
+    #if 24.396308 <= latitude <= 49.384358 and -125.000000 <= longitude <= -66.934570:
+        #return latitude, longitude
+
+    #return None, None
     return (getLoc.latitude, getLoc.longitude) if getLoc else None, None
 
+"""
+openai.api_key = os.getenv("OPENAI_API_KEY")
+async def chatgpt_request(prompt):
+    # Helper function to query the ChatGPT API.
+    response = await asyncio.to_thread(openai.completions.create,
+                                        model="gpt-4o",
+                                        prompt=prompt)
+    return response['choices'][0]['text']
+
+async def chat_extract_locations(text):
+    prompt = f"Extract all geographical locations (city, state) mentioned in this text: '{text}'. Return a JSON object like {{'locations': ['city1', 'state1', 'city2']}}."
+    
+    response = await chatgpt_request(prompt)
+    try:
+        data = json.loads(response)
+        return data.get("locations", [])
+    except json.JSONDecodeError:
+        return None
+
+async def chat_classify_relevant_state(text, locations):
+    if not locations:
+        return None
+
+    prompt = f"Given the text: '{text}', determine the most relevant location from this list: {locations}. Return only the most relevant location."
+    
+    response = await chatgpt_request(prompt)
+    return response.strip()
+
+async def chat_locate_disaster(text):
+    locations = await chat_extract_locations(text)
+    if not locations:
+        return None, None
+
+    # Get the most relevant location
+    most_relevant = await chat_classify_relevant_state(text, locations)
+
+    # Use ChatGPT to determine the state if only the city is given
+    prompt = f"Identify the U.S. state for the city '{most_relevant}'. If it's already a state, return it as is."
+    
+    response = await chatgpt_request(prompt)
+    state = response.strip()
+    
+    return most_relevant, state
+
+async def chat_get_coordinates(location):
+    prompt = f"Provide latitude and longitude for '{location}' as a JSON object like {{'latitude': 00.000, 'longitude': 00.000}}."
+    
+    response = await chatgpt_request(prompt)
+    try:
+        data = json.loads(response)
+        return data.get("latitude", None), data.get("longitude", None)
+    except json.JSONDecodeError:
+        return None, None
+"""
 
 @app.get("/all-data")
 def get_all_data():
@@ -230,21 +373,23 @@ async def data_generator():
                 non_disaster_query += f"('{tweet}'), "
                 continue
             city, state = locate_disaster(tweet, extract_locations(tweet))
-            await sleep(1)
+            #city, state = await chat_locate_disaster(tweet)
+            #await sleep(1)
             print(f"I get here {city} {state}")
             # if city is None:
             #     continue
             
             (latitude, longitude) = get_coordinates(location=city)
-
+            #latitude, longitude = await chat_get_coordinates(city)
             if city == state:
                 city = None
             # if latitude is None or longitude is None:
             #     continue
+            
             # Call geopy library to get latitude and longitude
             # Call Model to classify the tweet
             print(tweet, latitude, longitude, city, state, disaster)
-            disaster_query += f"({tweet}, {disaster}, {state}, {city}, {latitude}, {longitude}), "
+            disaster_query += f"('{tweet}', {disaster}, {state}, {city}, {latitude}, {longitude}), "
             return_data.append({"tweet":tweet, "disaster":disaster, "state":state, "city":city, "latitude":latitude, "longitude":longitude})
             # append Value to query
         # make an insert call to database
