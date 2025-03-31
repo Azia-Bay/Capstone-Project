@@ -1,5 +1,5 @@
 import { Lato } from "next/font/google";
-
+import { useEffect } from 'react';
 import Head from "next/head"
 
 import Header from "../components/header";
@@ -15,6 +15,35 @@ const lato = Lato({
 });
 
 export default function Home() {
+	let newTweets = [];
+	useEffect(() => {
+		const setUpStream = async () => {
+			const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+			await sleep(2000)
+			// Create EventSource for SSE endpoint
+			const eventSource = new EventSource('http://localhost:8000/stream');
+
+			eventSource.onopen = () => {
+				console.log('EventSource connected')
+			}
+
+			//eventSource can have event listeners based on the type of event.
+			//Bydefault for message type of event it have the onmessage method which can be used directly or this same can be achieved through explicit eventlisteners
+			eventSource.addEventListener('newTweets', function (event) {
+				newTweets = JSON.parse(event.data);
+				console.log('new tweets:', newTweets);
+			});
+
+			//In case of any error, if eventSource is not closed explicitely then client will retry the connection a new call to backend will happen and the cycle will go on.
+			eventSource.onerror = (error) => {
+				console.error('EventSource failed', error)
+				eventSource.close()
+			}
+		}
+		setUpStream()
+	
+	}, []) 
+	
 	return (
 		<div
 			className={`h-screen w-screen flex flex-col ${lato.className}`}

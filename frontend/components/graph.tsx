@@ -10,6 +10,7 @@ export default function Graph() {
   const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
+
     fetch("/preprocessed_data_utf8.csv")
       .then(response => response.text())
       .then(csvData => {
@@ -23,8 +24,7 @@ export default function Graph() {
           dynamicTyping: true,
           complete: function (result) {
             const labels = result.data.map(row => row.Category);
-            const values = result.data.map(row => row.Value);
-            
+            const values = result.data.map(row => row.Value);  
             setChartData({
               labels,
               datasets: [
