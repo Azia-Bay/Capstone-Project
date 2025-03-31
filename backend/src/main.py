@@ -286,14 +286,15 @@ async def data_generator():
             city, state = locate_disaster(tweet, extract_locations(tweet))
             await sleep(1)
             print(f"I get here {city} {state}")
-            if city is None:
-                continue
+            # if city is None:
+            #     continue
             
             (latitude, longitude) = get_coordinates(location=city)
+
             if city == state:
                 city = None
-            if latitude is None or longitude is None:
-                continue
+            # if latitude is None or longitude is None:
+            #     continue
             # Call geopy library to get latitude and longitude
             # Call Model to classify the tweet
             print(tweet, latitude, longitude, city, state, disaster)
