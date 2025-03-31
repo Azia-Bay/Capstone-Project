@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from bluesky import RealTimeData
-import sys
 import uvicorn
 import spacy
 from geopy.geocoders import Nominatim
@@ -9,9 +8,9 @@ from fastapi.responses import StreamingResponse
 import time
 import mysql.connector
 from mysql.connector import errorcode
+
 import torch
 import torch.nn as nn
-from predictor import DisasterPredictor
 import json
 import asyncio
 import os
@@ -69,6 +68,7 @@ torch.serialization.add_safe_globals([nn.LSTM])
 torch.serialization.add_safe_globals([nn.Dropout])
 torch.serialization.add_safe_globals([nn.Linear])
 import numpy as np
+from predictor import DisasterPredictor, LSTMClassifier
 from asyncio import sleep
 import json
 from transformers import pipeline
@@ -351,6 +351,7 @@ def tokenize(text):
         tokens = tokens[:max_length]
     
     return tokens
+
 model = DisasterPredictor(model_dir="/app/src/disaster_model")
 real_time = RealTimeData()
 async def data_generator():
@@ -375,15 +376,16 @@ async def data_generator():
             #city, state = await chat_locate_disaster(tweet)
             #await sleep(1)
             print(f"I get here {city} {state}")
-            if city is None:
-                continue
+            # if city is None:
+            #     continue
             
-            latitude, longitude = get_coordinates(location=city)
+            (latitude, longitude) = get_coordinates(location=city)
             #latitude, longitude = await chat_get_coordinates(city)
             if city == state:
                 city = None
-            #if latitude is None or longitude is None:
-                #continue
+            # if latitude is None or longitude is None:
+            #     continue
+            
             # Call geopy library to get latitude and longitude
             # Call Model to classify the tweet
             print(tweet, latitude, longitude, city, state, disaster)
@@ -409,14 +411,6 @@ async def data_generator():
         yield f"event: newTweets\ndata: {json_data}\n\n"
         await sleep(60)
 
-async def waypoints_generator():
-    waypoints = [{"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249}]
-    # waypoints = json.load(waypoints)
-    for waypoint in waypoints[0: 10]:
-        print(f"{waypoint}")
-        data = json.dumps(waypoint)
-        yield f"event: newTweets\ndata: {data}\n\n"
-        await sleep(1)
 @app.get("/stream")
 async def stream():
     return StreamingResponse(data_generator(), media_type="text/event-stream")
@@ -425,53 +419,5 @@ async def stream():
 def get_real_time_data():
     pass
 
-
-
-
-# @app.post("/process-data")
-# def process_data():
-#     print("I get hit")
-#     # get real time tweets
-#     data = real_time.get_all()
-   
-#     disaster_query = "" # INSERT INTO tbl_name (a,b,c) VALUES
-#     non_disaster_query = "" 
-#     for tweet in data:
-#         # Call Spacy Function to get location.
-#         location = locate(tweet)
-#         if location is None:
-#             continue
-#         (latitude, longitude) = coordinates(location=location)
-#         print(tweet, latitude, longitude)
-#         if latitude is None or longitude is None:
-#             continue
-#         # Call geopy library to get latitude and longitude
-#         # Call Model to classify the tweet
-#         disaster = model(tweet)
-#         if disaster == 0:
-#             non_disaster_query += "({tweet}), "
-#         else:
-#             disaster_query += "({tweet}, {disaster}, {latitude}, {longitude}), "
-#         # append Value to query
-#     # make an insert call to database
-#     if disaster_query != "":
-#         disaster_query = disaster_query[:len(disaster_query)-2]
-#         disaster_query += ";"
-#         disaster_query = "INSERT INTO `disaster_data` (tweet, model, latitude, longitude) VALUES " + disaster_query
-#         cursor.execute(disaster_query)
-
-#     if non_disaster_query != "":
-#         non_disaster_query = non_disaster_query[:len(non_disaster_query)-2]
-#         non_disaster_query += ";"
-#         non_disaster_query = "INSERT INTO `disaster_data` (tweet) VALUES " + non_disaster_query
-#         cursor.execute(non_disaster_query)
-#     cnx.commit()
-    
-#     return 201
-
 if __name__ == "__main__":
-    # cron = CronTab(user="root")
-    # job = cron.new(command='python /app/src/call_process_data.py')
-    # job.minute.every(1)
-    # cron.write()
     uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="info")
