@@ -13,7 +13,6 @@ import json
 from asyncio import sleep
 import os
 import re
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 from predictor import DisasterPredictor, LSTMClassifier
 from asyncio import sleep
 import json
@@ -270,9 +269,11 @@ def get_all_data():
         temp["tweet_id"] = row[0]
         temp["tweet"] = row[1]
         temp["model"] = row[2]
-        temp["latitude"] = row[3]
-        temp["longitude"] = row[4]
-        temp["timestamp"] = row[5]
+        temp["state"] = row[3]
+        temp["city"] = row[4]
+        temp["latitude"] = row[5]
+        temp["longitude"] = row[6]
+        temp["timestamp"] = row[7]
         data.append(temp)
     return data
 
