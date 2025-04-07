@@ -1,69 +1,21 @@
 from fastapi import FastAPI
 from bluesky import RealTimeData
-import sys
 import uvicorn
 import spacy
 from geopy.geocoders import Nominatim
+from shapely.geometry import Point
+import geopandas as gpd
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import time
 import mysql.connector
 from mysql.connector import errorcode
-import torch
-import torch.nn as nn
-from predictor import DisasterPredictor
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f"Using device: {device}")
-class LSTMClassifier(nn.Module):
-    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, n_layers, bidirectional, dropout, pad_idx):
-        super().__init__()
-        
-        # Embedding layer
-        self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=pad_idx)
-        
-        # LSTM layer
-        self.lstm = nn.LSTM(embedding_dim, 
-                           hidden_dim, 
-                           num_layers=n_layers, 
-                           bidirectional=bidirectional, 
-                           dropout=dropout if n_layers > 1 else 0,
-                           batch_first=True)
-        
-        # Dropout layer
-        self.dropout = nn.Dropout(dropout)
-        
-        # Fully connected layer
-        fc_input_dim = hidden_dim * 2 if bidirectional else hidden_dim
-        self.fc = nn.Linear(fc_input_dim, output_dim)
-        
-    def forward(self, text):
-        # text shape: [batch size, sentence length]
-        
-        # Generate embeddings
-        embedded = self.embedding(text)  # shape: [batch size, sentence length, embedding dim]
-        
-        # Pass through LSTM
-        output, (hidden, cell) = self.lstm(embedded)
-        
-        # Extract the final forward and backward hidden states if bidirectional
-        if self.lstm.bidirectional:
-            hidden = torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim=1)
-        else:
-            hidden = hidden[-1,:,:]
-        
-        # Apply dropout
-        hidden = self.dropout(hidden)
-        
-        # Pass through linear layer
-        output = self.fc(hidden)
-        
-        return output
-torch.serialization.add_safe_globals([LSTMClassifier])
-torch.serialization.add_safe_globals([nn.Embedding])
-torch.serialization.add_safe_globals([nn.LSTM])
-torch.serialization.add_safe_globals([nn.Dropout])
-torch.serialization.add_safe_globals([nn.Linear])
-import numpy as np
+
+import json
+from asyncio import sleep
+import os
+import re
+from predictor import DisasterPredictor, LSTMClassifier
 from asyncio import sleep
 import json
 from transformers import pipeline
@@ -146,16 +98,53 @@ for table_name in TABLES:
 def read_root():
     return {"Hello": "World"}
 
+# Load shapefile for US states
+us_map = gpd.read_file("/app/src/shapely/ne_110m_admin_1_states_provinces.shp", encoding="utf-8")
+# Only map US
+us_map = us_map[us_map["admin"] == "United States of America"]
+
+#US states to detect
+state_abbreviations = {
+"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
+"CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
+"HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa",
+"KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+"MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi",
+"MO": "Missouri", "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire",
+"NJ": "New Jersey", "NM": "New Mexico", "NY": "New York", "NC": "North Carolina",
+"ND": "North Dakota", "OH": "Ohio", "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania",
+"RI": "Rhode Island", "SC": "South Carolina", "SD": "South Dakota", "TN": "Tennessee",
+"TX": "Texas", "UT": "Utah", "VT": "Vermont", "VA": "Virginia", "WA": "Washington",
+"WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming"
+}
+
+us_states = set(state_abbreviations.values())
+
+def extract_hashtags(text):
+    # Extracts potential location names from hashtags.
+    return [tag[1:] for tag in re.findall(r"#\w+", text)]
+
 # takes in a argument of text and returns an Optional max_gpe
 def extract_locations(text):
     nlp = spacy.load('en_core_web_trf')
 
-    text = text.upper()
+    #text = text.upper()
     doc = nlp(text)
     locations = {}
     for item in doc.ents:
         if item.label_ == 'GPE':
-            locations[item.text] = locations.get(item.text, 0) + 1
+            # Convert state abbreviations
+            loc_name = state_abbreviations.get(item.text, item.text) 
+            locations[loc_name] = locations.get(loc_name, 0) + 1
+    # Check hashtags for locations
+    hashtags = extract_hashtags(text)
+    for tag in hashtags:
+        tag_doc = nlp(tag)
+        for entity in tag_doc.ents:
+            if entity.label_ == "GPE":
+                loc_name = state_abbreviations.get(entity.text, entity.text)
+                locations[loc_name] = locations.get(loc_name, 0) + 1
+
     return locations if locations else None
     
 def classify_relevant_state(text, locations):
@@ -171,18 +160,6 @@ def classify_relevant_state(text, locations):
 def locate_disaster(text, locations):
     if not locations:
         return None, None
-
-    #US states to detect
-    us_states = {
-    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
-    "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-    "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
-    "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-    "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
-    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
-    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
-    "Wisconsin", "Wyoming"
-    }
     
     #Get the most mentioned location
     if len(locations) > 1:
@@ -209,8 +186,15 @@ def locate_disaster(text, locations):
 def get_coordinates(location):
     loc = Nominatim(user_agent="GetLoc")
     getLoc = loc.geocode(location)
-    return (getLoc.latitude, getLoc.longitude) if getLoc else None, None
+    if getLoc:
+        if is_within_us(getLoc.latitude, getLoc.longitude):
+            return getLoc.latitude, getLoc.longitude
+    return None, None
 
+def is_within_us(latitude, longitude):
+    # Check if the coordinates are within the U.S. boundaries.
+    point = Point(longitude, latitude)
+    return us_map.geometry.contains(point).any()
 
 @app.get("/all-data")
 def get_all_data():
@@ -224,9 +208,11 @@ def get_all_data():
         temp["tweet_id"] = row[0]
         temp["tweet"] = row[1]
         temp["model"] = row[2]
-        temp["latitude"] = row[3]
-        temp["longitude"] = row[4]
-        temp["timestamp"] = row[5]
+        temp["state"] = row[3]
+        temp["city"] = row[4]
+        temp["latitude"] = row[5]
+        temp["longitude"] = row[6]
+        temp["timestamp"] = row[7]
         data.append(temp)
     return data
 
@@ -263,6 +249,7 @@ def tokenize(text):
         tokens = tokens[:max_length]
     
     return tokens
+
 model = DisasterPredictor(model_dir="/app/src/disaster_model")
 real_time = RealTimeData()
 async def data_generator():
@@ -286,18 +273,26 @@ async def data_generator():
             city, state = locate_disaster(tweet, extract_locations(tweet))
             await sleep(1)
             print(f"I get here {city} {state}")
-            if city is None:
-                continue
-            
-            (latitude, longitude) = get_coordinates(location=city)
+            # if city is None:
+            #     continue
+            coordinates = get_coordinates(location=city)
+            latitude, longitude = coordinates[0], coordinates[1]
             if city == state:
                 city = None
             if latitude is None or longitude is None:
                 continue
+            if city:
+                city = city.replace("\\", "")
+            if state:
+                state = state.replace("\\", "")
             # Call geopy library to get latitude and longitude
             # Call Model to classify the tweet
+            if city:
+                city = city.replace("\\", "")
+            if state:
+                state = state.replace("\\", "")
             print(tweet, latitude, longitude, city, state, disaster)
-            disaster_query += f"({tweet}, {disaster}, {state}, {city}, {latitude}, {longitude}), "
+            disaster_query += f"('{tweet}', {disaster}, '{state}', '{city}', '{latitude}', '{longitude}'), "
             return_data.append({"tweet":tweet, "disaster":disaster, "state":state, "city":city, "latitude":latitude, "longitude":longitude})
             # append Value to query
         # make an insert call to database
@@ -319,14 +314,6 @@ async def data_generator():
         yield f"event: newTweets\ndata: {json_data}\n\n"
         await sleep(60)
 
-async def waypoints_generator():
-    waypoints = [{"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249}, {"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249},{"latitude":102.193, "longitude":-120.249}]
-    # waypoints = json.load(waypoints)
-    for waypoint in waypoints[0: 10]:
-        print(f"{waypoint}")
-        data = json.dumps(waypoint)
-        yield f"event: newTweets\ndata: {data}\n\n"
-        await sleep(1)
 @app.get("/stream")
 async def stream():
     return StreamingResponse(data_generator(), media_type="text/event-stream")
@@ -335,53 +322,5 @@ async def stream():
 def get_real_time_data():
     pass
 
-
-
-
-# @app.post("/process-data")
-# def process_data():
-#     print("I get hit")
-#     # get real time tweets
-#     data = real_time.get_all()
-   
-#     disaster_query = "" # INSERT INTO tbl_name (a,b,c) VALUES
-#     non_disaster_query = "" 
-#     for tweet in data:
-#         # Call Spacy Function to get location.
-#         location = locate(tweet)
-#         if location is None:
-#             continue
-#         (latitude, longitude) = coordinates(location=location)
-#         print(tweet, latitude, longitude)
-#         if latitude is None or longitude is None:
-#             continue
-#         # Call geopy library to get latitude and longitude
-#         # Call Model to classify the tweet
-#         disaster = model(tweet)
-#         if disaster == 0:
-#             non_disaster_query += "({tweet}), "
-#         else:
-#             disaster_query += "({tweet}, {disaster}, {latitude}, {longitude}), "
-#         # append Value to query
-#     # make an insert call to database
-#     if disaster_query != "":
-#         disaster_query = disaster_query[:len(disaster_query)-2]
-#         disaster_query += ";"
-#         disaster_query = "INSERT INTO `disaster_data` (tweet, model, latitude, longitude) VALUES " + disaster_query
-#         cursor.execute(disaster_query)
-
-#     if non_disaster_query != "":
-#         non_disaster_query = non_disaster_query[:len(non_disaster_query)-2]
-#         non_disaster_query += ";"
-#         non_disaster_query = "INSERT INTO `disaster_data` (tweet) VALUES " + non_disaster_query
-#         cursor.execute(non_disaster_query)
-#     cnx.commit()
-    
-#     return 201
-
 if __name__ == "__main__":
-    # cron = CronTab(user="root")
-    # job = cron.new(command='python /app/src/call_process_data.py')
-    # job.minute.every(1)
-    # cron.write()
     uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="info")
