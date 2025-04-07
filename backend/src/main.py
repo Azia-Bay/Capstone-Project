@@ -99,10 +99,8 @@ def read_root():
     return {"Hello": "World"}
 
 # Load shapefile for US states
-#us_map = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
 us_map = gpd.read_file("/app/src/shapely/ne_110m_admin_1_states_provinces.shp", encoding="utf-8")
 # Only map US
-#us_map = us_map[us_map['iso_a3'] == 'USA']
 us_map = us_map[us_map["admin"] == "United States of America"]
 
 #US states to detect
@@ -163,18 +161,6 @@ def classify_relevant_state(text, locations):
 def locate_disaster(text, locations):
     if not locations:
         return None, None
-
-    #US states to detect
-    us_states = {
-    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
-    "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-    "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
-    "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-    "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
-    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
-    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
-    "Wisconsin", "Wyoming"
-    }
     
     #Get the most mentioned location
     if len(locations) > 1:
