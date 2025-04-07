@@ -133,7 +133,6 @@ def extract_locations(text):
     locations = {}
     for item in doc.ents:
         if item.label_ == 'GPE':
-            #locations[item.text] = locations.get(item.text, 0) + 1
             # Convert state abbreviations
             loc_name = state_abbreviations.get(item.text, item.text) 
             locations[loc_name] = locations.get(loc_name, 0) + 1
@@ -191,72 +190,11 @@ def get_coordinates(location):
         if is_within_us(getLoc.latitude, getLoc.longitude):
             return getLoc.latitude, getLoc.longitude
     return None, None
-    #latitude, longitude = getLoc.latitude, getLoc.longitude
-    # Reject coordinates outside the US (based on a bounding box)
-    #if 24.396308 <= latitude <= 49.384358 and -125.000000 <= longitude <= -66.934570:
-        #return latitude, longitude
-
-    #return None, None
-    #return (getLoc.latitude, getLoc.longitude) if getLoc else None, None
 
 def is_within_us(latitude, longitude):
     # Check if the coordinates are within the U.S. boundaries.
     point = Point(longitude, latitude)
     return us_map.geometry.contains(point).any()
-"""
-openai.api_key = os.getenv("OPENAI_API_KEY")
-async def chatgpt_request(prompt):
-    # Helper function to query the ChatGPT API.
-    response = await asyncio.to_thread(openai.completions.create,
-                                        model="gpt-4o",
-                                        prompt=prompt)
-    return response['choices'][0]['text']
-
-async def chat_extract_locations(text):
-    prompt = f"Extract all geographical locations (city, state) mentioned in this text: '{text}'. Return a JSON object like {{'locations': ['city1', 'state1', 'city2']}}."
-    
-    response = await chatgpt_request(prompt)
-    try:
-        data = json.loads(response)
-        return data.get("locations", [])
-    except json.JSONDecodeError:
-        return None
-
-async def chat_classify_relevant_state(text, locations):
-    if not locations:
-        return None
-
-    prompt = f"Given the text: '{text}', determine the most relevant location from this list: {locations}. Return only the most relevant location."
-    
-    response = await chatgpt_request(prompt)
-    return response.strip()
-
-async def chat_locate_disaster(text):
-    locations = await chat_extract_locations(text)
-    if not locations:
-        return None, None
-
-    # Get the most relevant location
-    most_relevant = await chat_classify_relevant_state(text, locations)
-
-    # Use ChatGPT to determine the state if only the city is given
-    prompt = f"Identify the U.S. state for the city '{most_relevant}'. If it's already a state, return it as is."
-    
-    response = await chatgpt_request(prompt)
-    state = response.strip()
-    
-    return most_relevant, state
-
-async def chat_get_coordinates(location):
-    prompt = f"Provide latitude and longitude for '{location}' as a JSON object like {{'latitude': 00.000, 'longitude': 00.000}}."
-    
-    response = await chatgpt_request(prompt)
-    try:
-        data = json.loads(response)
-        return data.get("latitude", None), data.get("longitude", None)
-    except json.JSONDecodeError:
-        return None, None
-"""
 
 @app.get("/all-data")
 def get_all_data():
@@ -333,14 +271,12 @@ async def data_generator():
                 non_disaster_query += f"('{tweet}'), "
                 continue
             city, state = locate_disaster(tweet, extract_locations(tweet))
-            #city, state = await chat_locate_disaster(tweet)
             await sleep(1)
             print(f"I get here {city} {state}")
             # if city is None:
             #     continue
             coordinates = get_coordinates(location=city)
             latitude, longitude = coordinates[0], coordinates[1]
-            #latitude, longitude = await chat_get_coordinates(city)
             if city == state:
                 city = None
             if latitude is None or longitude is None:
