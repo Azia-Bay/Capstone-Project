@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Lato } from "next/font/google";
 import Head from "next/head";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import axios from 'axios';
 
 import Header from "../components/header";
 import Navbar from "../components/navbar";
@@ -34,58 +35,113 @@ export default function Data() {
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		const setUpStream = async () => {
-			const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-			await sleep(2000);
-			
-			// Create EventSource for SSE endpoint
-			const eventSource = new EventSource('http://localhost:8000/all-data');
-
-			eventSource.onopen = () => {
-				console.log('EventSource connected');
-				setLoading(false);
-			}
-
-			eventSource.addEventListener('newTweets', function (event) {
-				const newTweets: TweetData[] = JSON.parse(event.data);
-				console.log('new tweets:', newTweets);
-				
-				// Update state by appending new tweets
-				setData(prevData => {
-					// Avoid duplicate tweets
-					const uniqueNewTweets = newTweets.filter(
-						newTweet => !prevData.some(
-							existingTweet => 
-								existingTweet.tweet === newTweet.tweet && 
-								existingTweet.disasterType === newTweet.disasterType
-						)
-					);
-					
-					return [...prevData, ...uniqueNewTweets];
-				});
-			});
-
-			// Error handling
-			eventSource.onerror = (error) => {
-				console.error('EventSource failed', error);
-				setError('Failed to connect to tweet stream');
-				eventSource.close();
-				setLoading(false);
-			}
-
-			// Cleanup function to close EventSource
-			return () => {
-				eventSource.close();
-			};
-		}
-
-		const streamSetup = setUpStream();
+		// Create variable to store cleanup function
+		let cleanupFunction: (() => void) | undefined;
 		
-		// Cleanup on component unmount
+		// Function to fetch tweets
+		const fetchTweets = async () => {
+			try {
+				// Initial delay to simulate the original behavior
+				await new Promise(resolve => setTimeout(resolve, 2000));
+				
+				const response = await axios.get('http://localhost:8000/nondisaster-data');
+				setData(response.data);
+				
+				// Simulating a successful response for now
+				const mockData: TweetData[] = [
+					{ tweet: "Just felt a small earthquake, everything is fine though. #earthquake", disasterType: 1 },
+					{ tweet: "Beautiful day outside today! Going for a hike.", disasterType: 0 },
+					{ tweet: "Flood warnings in effect for the eastern part of the county. Stay safe! #flood", disasterType: 2 }
+				];
+				setData(mockData);
+				setLoading(false);
+				
+				// Set up polling for new tweets
+				cleanupFunction = startPolling();
+			} catch (err) {
+				console.error('Failed to fetch tweets:', err);
+				setError('Failed to fetch tweet data');
+				setLoading(false);
+			}
+		};
+		
+		// Function to poll for new tweets at regular intervals
+		const startPolling = (): (() => void) => {
+			const pollingInterval = setInterval(async () => {
+				try {
+					const response = await axios.get('http://localhost:8000/nondisaster-data');
+					
+					// For now, simulate new data
+					const mockNewData: TweetData[] = [
+						{ tweet: "Hurricane warning issued for coastal areas. #hurricane", disasterType: 3 }
+					];
+					
+					// Update state by appending new tweets
+					setData(prevData => {
+						// Avoid duplicate tweets
+						const uniqueNewTweets = mockNewData.filter(
+							newTweet => !prevData.some(
+								existingTweet => 
+									existingTweet.tweet === newTweet.tweet && 
+									existingTweet.disasterType === newTweet.disasterType
+							)
+						);
+						
+						return [...prevData, ...uniqueNewTweets];
+					});
+				} catch (err) {
+					console.error('Polling failed:', err);
+					// Don't set error state here to avoid disrupting the UI if just one poll fails
+				}
+			}, 5000); // Poll every 5 seconds
+			
+			// Return cleanup function
+			return () => clearInterval(pollingInterval);
+		};
+		
+		// Start the initial fetch
+		fetchTweets();
+		
+		// Cleanup function
 		return () => {
-			streamSetup.then(cleanup => cleanup && cleanup());
+			if (cleanupFunction) {
+				cleanupFunction();
+			}
 		};
 	}, []);
+
+	// Async function to fetch data on demand (could be used for refresh button)
+	const refreshData = async () => {
+		setLoading(true);
+		try {
+			const response = await axios.get('http://localhost:8000/nondisaster-data');
+			
+			// For now, simulate new data
+			const mockNewData: TweetData[] = [
+				{ tweet: "Tornado spotted near downtown! Take shelter immediately! #tornado", disasterType: 4 },
+				{ tweet: "Wildfire contained, firefighters monitoring the situation. #wildfire", disasterType: 5 }
+			];
+			
+			// Update state with the fetched data while preserving existing data
+			setData(prevData => {
+				// Avoid duplicate tweets
+				const uniqueNewTweets = mockNewData.filter(
+					newTweet => !prevData.some(
+						existingTweet => 
+							existingTweet.tweet === newTweet.tweet && 
+							existingTweet.disasterType === newTweet.disasterType
+					)
+				);
+				
+				return [...prevData, ...uniqueNewTweets];
+			});
+			setLoading(false);
+		} catch (err) {
+			console.error('Failed to refresh data:', err);
+			setError('Failed to refresh tweet data');
+			setLoading(false);
+		}
+	};
 
 	// Calculate disaster type distribution
 	const getDisasterDistribution = () => {
@@ -160,6 +216,19 @@ export default function Data() {
 				<div style={{ padding: '20px' }}>
 					<h1>Data Analysis</h1>
 					<p style={{ color: 'red' }}>{error}</p>
+					<button 
+						onClick={refreshData}
+						style={{
+							padding: '8px 16px',
+							backgroundColor: '#0088FE',
+							color: 'white',
+							border: 'none',
+							borderRadius: '4px',
+							cursor: 'pointer'
+						}}
+					>
+						Try Again
+					</button>
 				</div>
 			);
 		}
@@ -172,6 +241,21 @@ export default function Data() {
 			<div style={{ padding: '20px' }}>
 				<h1>Disaster Tweets Analysis</h1>
 				<p>Analyzing {data.length} tweets classified by disaster type</p>
+				
+				<button 
+					onClick={refreshData}
+					style={{
+						padding: '8px 16px',
+						backgroundColor: '#0088FE',
+						color: 'white',
+						border: 'none',
+						borderRadius: '4px',
+						cursor: 'pointer',
+						marginBottom: '20px'
+					}}
+				>
+					Refresh Data
+				</button>
 
 				<div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginTop: '30px' }}>
 					{/* Disaster Distribution Pie Chart */}
