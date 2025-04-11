@@ -8,7 +8,7 @@
 
 #ARG PYTHON_VERSION=3.13.2
 # Using a more stable Python version since 3.13.2 is not compatible with thinc.
-ARG PYTHON_VERSION=3.9
+ARG PYTHON_VERSION=3.10
 FROM python:${PYTHON_VERSION}-slim as base
 
 # Prevents Python from writing pyc files.
