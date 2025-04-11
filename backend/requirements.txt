@@ -16,3 +16,4 @@ torch==2.6.0
 numpy==2.0.2
 shapely
 geopandas
+pydantic==1.10.2

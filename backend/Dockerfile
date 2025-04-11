@@ -59,6 +59,8 @@ RUN apt-get update && apt-get install -y \
 # Optionally upgrade pip, setuptools, and wheel to avoid issues
 RUN pip install --upgrade pip setuptools wheel
 
+# Force reinstall pydantic first
+RUN pip install --no-cache-dir --force-reinstall "pydantic==1.10.2"
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
 # Leverage a bind mount to requirements.txt to avoid having to copy them into
@@ -68,7 +70,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python -m pip install --no-cache-dir -r requirements.txt
 
 # Install spaCy using the --no-cache-dir and -prefer-binary flags and the English model.
-RUN pip install --no-cache-dir --prefer-binary spacy
+#RUN pip install --no-cache-dir --prefer-binary spacy
+RUN pip install spacy
 RUN python -m spacy download en_core_web_trf
 
 # Switch to the non-privileged user to run the application.

@@ -12,7 +12,6 @@ services:
     image: mysql:9
     volumes: 
       - ./data:/var/lib/mysql
-    restart: always
     user: mysql
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
