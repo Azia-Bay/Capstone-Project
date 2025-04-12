@@ -2,17 +2,18 @@ import { useState, useEffect } from "react";
 
 import Graph from "../components/graph";
 
-export default function DisasterMap() {
-    interface Tweet {
-        tweet_id: string;
-        tweet: string;
-        model: string;
-        state: string;
-        city: string;
-        latitude: number;
-        longitude: number;
-        timestamp: string;
-      }      
+export interface Tweet {
+    tweet_id: string;
+    tweet: string;
+    model: number;
+    state: string;
+    city: string;
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+  }  
+
+export default function DisasterMap() {    
     
     const [hoveredPath, setHoveredPath] = useState(null);
     const [selectedPath, setSelectedPath] = useState(null);
@@ -753,7 +754,7 @@ export default function DisasterMap() {
                         </button>
                         
                         <h3 style={{ marginBottom: "10px", fontSize: "16px" }}>Tweets from {selectedPath}</h3>
-                        <Graph />
+                        <Graph tweets={selectedTweets}/>
 
                         {selectedTweets.length > 0 ? (
                         <ul style={{ maxHeight: "200px", overflowY: "scroll", padding: 0, listStyle: "none", marginTop: "10px" }}>
