@@ -63,9 +63,15 @@ RUN pip install --upgrade pip setuptools wheel
 # Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
 # Leverage a bind mount to requirements.txt to avoid having to copy them into
 # into this layer.
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    python -m pip install --no-cache-dir -r requirements.txt
+#RUN --mount=type=cache,target=/root/.cache/pip \
+    #--mount=type=bind,source=requirements.txt,target=requirements.txt \
+    #--mount=type=bind,source=constraints.txt,target=constraints.txt \
+    #python -m pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+#RUN pip install --no-cache-dir \
+        #-r requirements.txt \
+        #-c constraints.txt
 
 # Install spaCy using the --no-cache-dir and -prefer-binary flags and the English model.
 RUN pip install --no-cache-dir --prefer-binary spacy
