@@ -2,16 +2,52 @@ import { useState, useEffect } from "react";
 import { Bar } from "react-chartjs-2";
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 import Papa from "papaparse";
+import { Tweet } from "../components/disaster_map";
 
 // Register required components
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-export default function Graph() {
+interface GraphProps {
+  tweets: Tweet[];
+}
+
+const categoryLabels: Record<string, string> = {
+  "1": "Earthquake",
+  "2": "Flood",
+  "3": "Hurricane",
+  "4": "Tornado",
+  "5": "Wildfire",
+};
+
+export default function Graph({ tweets }: GraphProps) {
   const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
+    const categoryCounts: Record<number, number> = {1:0, 2:0, 3:0, 4:0, 5:0};
 
-    fetch("/preprocessed_data_utf8.csv")
+    tweets.forEach(tweet => {
+      const category = Number(tweet.model);
+      if (categoryCounts[category] !== undefined) {
+        categoryCounts[category]++;
+      }
+    });
+
+    const labels = Object.keys(categoryCounts).map(c => categoryLabels[c] || `Category ${c}`);
+    const values = Object.values(categoryCounts);
+
+    setChartData({
+      labels,
+      datasets: [
+        {
+          label: "Tweets",
+          data: values,
+          backgroundColor: "rgba(75,192,192,0.6)",
+        },
+      ],
+    });
+  }, [tweets]);
+  
+    /*fetch("/preprocessed_data_utf8.csv")
       .then(response => response.text())
       .then(csvData => {
         interface DataRow {
@@ -39,7 +75,7 @@ export default function Graph() {
         });
       });
   }, []);
-
+  */
   if (!chartData) return <p>Loading...</p>;
 
   return (
