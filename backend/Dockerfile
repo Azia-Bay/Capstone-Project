@@ -68,16 +68,17 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python -m pip install --no-cache-dir -r requirements.txt
 
 # Install spaCy using the --no-cache-dir and -prefer-binary flags and the English model.
+# RUN TMPDIR=/var/tmp pip install --no-cache-dir --prefer-binary spacy
+# RUN TMPDIR=/var/tmp python -m spacy download en_core_web_trf
 RUN pip install --no-cache-dir --prefer-binary spacy
 RUN python -m spacy download en_core_web_trf
-
 # Switch to the non-privileged user to run the application.
 # USER appuser
 
 # Copy the source code into the container.
-COPY . .
+COPY . /app
 # Expose the port that the application listens on.
 EXPOSE 8000
 
 # Run the application.
-CMD ["pymon", "./src/main.py"]
+CMD ["python", "./src/main.py"]
