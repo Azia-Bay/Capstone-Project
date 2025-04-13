@@ -22,6 +22,7 @@ services:
       - 3306
   backend:
     build: ./backend
+    init: true
     ports:
       - 8000:8000
     volumes:
