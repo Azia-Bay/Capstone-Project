@@ -26,7 +26,7 @@ docker logs CONTAINER_NAME
 
 # GET all data
 
-http://localhost:8000/all-data
+http://localhost:8000/disaster-data
 
 # GET non disaster data
 
