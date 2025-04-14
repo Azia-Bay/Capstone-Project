@@ -23,3 +23,19 @@ docker logs -f CONTAINER_NAME
 # View Logs of a container
 
 docker logs CONTAINER_NAME
+
+# GET all data
+
+http://localhost:8000/disaster-data
+
+# GET non disaster data
+
+http://localhost:8000/nondisaster-data
+
+# Connect to real time data processing stream
+
+http://localhost:8000
+
+# Frontend
+
+http://localhost

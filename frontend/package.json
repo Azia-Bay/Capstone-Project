@@ -6,8 +6,9 @@
     "start": "next start"
   },
   "dependencies": {
+    "axios": "^1.8.4",
     "chart.js": "^4.4.8",
-    "next": "latest",
+    "next": "^15.2.4",
     "papaparse": "^5.5.2",
     "react": "latest",
     "react-chartjs-2": "^5.3.0",

@@ -8,7 +8,7 @@
 
 #ARG PYTHON_VERSION=3.13.2
 # Using a more stable Python version since 3.13.2 is not compatible with thinc.
-ARG PYTHON_VERSION=3.9
+ARG PYTHON_VERSION=3.10
 FROM python:${PYTHON_VERSION}-slim as base
 
 # Prevents Python from writing pyc files.
@@ -63,21 +63,28 @@ RUN pip install --upgrade pip setuptools wheel
 # Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
 # Leverage a bind mount to requirements.txt to avoid having to copy them into
 # into this layer.
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    python -m pip install --no-cache-dir -r requirements.txt
+#RUN --mount=type=cache,target=/root/.cache/pip \
+#--mount=type=bind,source=requirements.txt,target=requirements.txt \
+#--mount=type=bind,source=constraints.txt,target=constraints.txt \
+#python -m pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+#RUN pip install --no-cache-dir \
+#-r requirements.txt \
+#-c constraints.txt
 
 # Install spaCy using the --no-cache-dir and -prefer-binary flags and the English model.
+# RUN TMPDIR=/var/tmp pip install --no-cache-dir --prefer-binary spacy
+# RUN TMPDIR=/var/tmp python -m spacy download en_core_web_trf
 RUN pip install --no-cache-dir --prefer-binary spacy
 RUN python -m spacy download en_core_web_trf
-
 # Switch to the non-privileged user to run the application.
 # USER appuser
 
 # Copy the source code into the container.
-COPY . .
+COPY . /app
 # Expose the port that the application listens on.
 EXPOSE 8000
 
 # Run the application.
-CMD ["pymon", "./src/main.py"]
+CMD ["python", "./src/main.py"]

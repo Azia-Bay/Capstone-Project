@@ -1,13 +1,107 @@
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
+import axios from 'axios';
 import Graph from "../components/graph";
+import { Tweet } from "../types/Tweet";
 
-export default function DisasterMap() {
+
+export default function DisasterMap() {    
+    
     const [hoveredPath, setHoveredPath] = useState(null);
     const [selectedPath, setSelectedPath] = useState(null);
-    const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+    //const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    const [tweetsByState, setTweetsByState] = useState<Record<string, Tweet[]>>({});;
+    const [popupPosition, setPopupPosition] = useState({ x: 0, y: 20 });
+    
+    useEffect(() => {
+        const updatePopupPosition = () => {
+        const popupWidth = 310; // same as your maxWidth
+        const margin = 20;
+    
+        const x = window.innerWidth - popupWidth;
+        const y = margin;
+    
+        setPopupPosition({ x, y });
+        };
+    
+        updatePopupPosition(); // set initially
+        window.addEventListener("resize", updatePopupPosition); // update on resize
+    
+        return () => window.removeEventListener("resize", updatePopupPosition);
+    }, []);
+    
+    const stateNameToAbbr = {
+        "Alabama": "AL",
+        "Alaska": "AK",
+        "Arizona": "AZ",
+        "Arkansas": "AR",
+        "California": "CA",
+        "Colorado": "CO",
+        "Connecticut": "CT",
+        "Delaware": "DE",
+        "Florida": "FL",
+        "Georgia": "GA",
+        "Hawaii": "HI",
+        "Idaho": "ID",
+        "Illinois": "IL",
+        "Indiana": "IN",
+        "Iowa": "IA",
+        "Kansas": "KS",
+        "Kentucky": "KY",
+        "Louisiana": "LA",
+        "Maine": "ME",
+        "Maryland": "MD",
+        "Massachusetts": "MA",
+        "Michigan": "MI",
+        "Minnesota": "MN",
+        "Mississippi": "MS",
+        "Missouri": "MO",
+        "Montana": "MT",
+        "Nebraska": "NE",
+        "Nevada": "NV",
+        "New Hampshire": "NH",
+        "New Jersey": "NJ",
+        "New Mexico": "NM",
+        "New York": "NY",
+        "North Carolina": "NC",
+        "North Dakota": "ND",
+        "Ohio": "OH",
+        "Oklahoma": "OK",
+        "Oregon": "OR",
+        "Pennsylvania": "PA",
+        "Rhode Island": "RI",
+        "South Carolina": "SC",
+        "South Dakota": "SD",
+        "Tennessee": "TN",
+        "Texas": "TX",
+        "Utah": "UT",
+        "Vermont": "VT",
+        "Virginia": "VA",
+        "Washington": "WA",
+        "West Virginia": "WV",
+        "Wisconsin": "WI",
+        "Wyoming": "WY",
+    };
+      
+    const abbrToStateName = Object.entries(stateNameToAbbr).reduce((acc, [full, abbr]) => {
+        acc[abbr] = full;
+        return acc;
+    }, {} as Record<string, string>);
+
+    useEffect(() => {
+        axios.get(`http://${process.env.NEXT_PUBLIC_BASE_URL}:8000/disaster-data`)
+        .then((res) => res.data)
+        .then((tweets: Tweet[]) => {
+            const grouped: Record<string, Tweet[]> = {};
+            tweets.forEach(tweet => {
+              const abbr = stateNameToAbbr[tweet.state] || tweet.state; // Convert full name to abbreviation, if possible
+              if (!grouped[abbr]) grouped[abbr] = [];
+              grouped[abbr].push(tweet);
+            });
+            setTweetsByState(grouped);
+          });
+      }, []);
 
     const handleMouseEnter = (id: string) => {
         setHoveredPath(id);
@@ -23,12 +117,14 @@ export default function DisasterMap() {
             const bbox = stateElement.getBoundingClientRect(); // Get state's position
         
             setSelectedPath(id);
-            setPopupPosition({
+            /*setPopupPosition({
             x: bbox.left + bbox.width / 2 - 175, // Center horizontally
             y: bbox.top - 250, // Position slightly above the state
-            });
+            });*/
         }
     };
+
+    const selectedTweets = selectedPath ? tweetsByState[selectedPath] || [] : [];
 
     return (
         <div
@@ -48,7 +144,7 @@ export default function DisasterMap() {
                     height="450px"
                     style={{
                         display: "block",
-                        fill: "none",
+                        //fill: "none",
                         margin: "auto",
                         stroke: "white",
                         strokeLinejoin: "round"}}
@@ -629,7 +725,7 @@ export default function DisasterMap() {
                         padding: "10px",
                         borderRadius: "8px",
                         boxShadow: "2px 2px 10px rgba(0,0,0,0.3)",
-                        maxWidth: "400px",
+                        maxWidth: "310px",
                         zIndex: 1000,
                         }}
                     >
@@ -649,7 +745,7 @@ export default function DisasterMap() {
                         <button
                         onClick={() => setSelectedPath(null)}
                         style={{
-                            position: "absolute",
+                            position: "relative",
                             top: "5px",
                             right: "5px",
                             backgroundColor: "red",
@@ -665,8 +761,26 @@ export default function DisasterMap() {
                         >
                         X
                         </button>
-                        <h3 style={{ marginBottom: "5px", fontSize: "14px" }}>{selectedPath} Data</h3>
-                        <Graph />
+                        
+                        <h3 style={{ marginBottom: "10px", fontSize: "16px" }}>Tweets from {selectedPath}</h3>
+                        <Graph tweets={selectedTweets}/>
+
+                        {selectedTweets.length > 0 ? (
+                        <ul style={{ maxHeight: "200px", overflowY: "scroll", padding: 0, listStyle: "none", marginTop: "10px" }}>
+                            {selectedTweets.slice(0, 5).map(tweet => (
+                            <li key={tweet.tweet_id} style={{ marginBottom: "10px", fontSize: "12px", textAlign: "left" }}>
+                                <strong>
+                                {tweet.city && tweet.city !== "None" ? `${tweet.city},` : ""} {tweet.state}
+                                </strong>: {tweet.tweet}
+                                <br />
+                                <small>{new Date(tweet.timestamp).toLocaleString()}</small>
+                            </li>
+                            ))}
+                        </ul>
+                        ) : (
+                        <p style={{ fontSize: "12px", marginTop: "10px" }}>No tweets available for this state.</p>
+                        )}
+
                     </div>
                 )}
             </div>
