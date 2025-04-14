@@ -91,7 +91,7 @@ for table_name in TABLES:
 def read_root():
     return {"Hello": "World"}
 
-@app.get("/all-data")
+@app.get("/disaster-data")
 def get_all_data():
     cursor.execute("SELECT * FROM disaster_data")
     # gets data in this format [(tweet_id, tweet, model, latitude, longitude, timestamp)]

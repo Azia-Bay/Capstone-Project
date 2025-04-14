@@ -18,10 +18,28 @@ export default function DisasterMap() {
     const [hoveredPath, setHoveredPath] = useState(null);
     const [selectedPath, setSelectedPath] = useState(null);
     //const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-    const fixedPopupPosition = { x: 1000, y: 50 };
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [tweetsByState, setTweetsByState] = useState<Record<string, Tweet[]>>({});;
+    const [popupPosition, setPopupPosition] = useState({ x: 0, y: 20 });
+    
+    useEffect(() => {
+        const updatePopupPosition = () => {
+        const popupWidth = 310; // same as your maxWidth
+        const margin = 20;
+    
+        const x = window.innerWidth - popupWidth;
+        const y = margin;
+    
+        setPopupPosition({ x, y });
+        };
+    
+        updatePopupPosition(); // set initially
+        window.addEventListener("resize", updatePopupPosition); // update on resize
+    
+        return () => window.removeEventListener("resize", updatePopupPosition);
+    }, []);
+    
     const stateNameToAbbr = {
         "Alabama": "AL",
         "Alaska": "AK",
@@ -709,8 +727,8 @@ export default function DisasterMap() {
                     <div
                         style={{
                         position: "absolute",
-                        left: `${fixedPopupPosition.x}px`,
-                        top: `${fixedPopupPosition.y}px`,
+                        left: `${popupPosition.x}px`,
+                        top: `${popupPosition.y}px`,
                         backgroundColor: "white",
                         border: "2px solid black",
                         padding: "10px",
