@@ -99,7 +99,7 @@ export default function DisasterMap() {
     }, {} as Record<string, string>);
 
     useEffect(() => {
-        fetch("http://localhost:8000/all-data")
+        fetch("http://localhost:8000/disaster-data")
           .then(res => res.json())
           .then((tweets: Tweet[]) => {
             const grouped: Record<string, Tweet[]> = {};
