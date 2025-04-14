@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Bar } from "react-chartjs-2";
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 import Papa from "papaparse";
-import { Tweet } from "../components/disaster_map";
+import { Tweet } from "../types/Tweet";
 
 // Register required components
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);

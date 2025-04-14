@@ -5,7 +5,7 @@ import DisasterCard from "./disaster_card";
 export default function DisasterList() {
 	const [disasters, setDisasters] = useState([]);
 
-    useEffect(() => setDisasters([null, null, null, null, null]));
+    useEffect(() => {setDisasters([null, null, null, null, null])}, []);
 
     return (
         <div

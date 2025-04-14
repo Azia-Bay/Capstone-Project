@@ -1,17 +1,8 @@
 import { useState, useEffect } from "react";
-
+import axios from 'axios';
 import Graph from "../components/graph";
+import { Tweet } from "../types/Tweet";
 
-export interface Tweet {
-    tweet_id: string;
-    tweet: string;
-    model: number;
-    state: string;
-    city: string;
-    latitude: number;
-    longitude: number;
-    timestamp: string;
-  }  
 
 export default function DisasterMap() {    
     
@@ -99,9 +90,9 @@ export default function DisasterMap() {
     }, {} as Record<string, string>);
 
     useEffect(() => {
-        fetch("http://localhost:8000/disaster-data")
-          .then(res => res.json())
-          .then((tweets: Tweet[]) => {
+        axios.get("http://localhost:8000/disaster-data")
+        .then((res) => res.data)
+        .then((tweets: Tweet[]) => {
             const grouped: Record<string, Tweet[]> = {};
             tweets.forEach(tweet => {
               const abbr = stateNameToAbbr[tweet.state] || tweet.state; // Convert full name to abbreviation, if possible

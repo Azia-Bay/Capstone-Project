@@ -1,7 +1,7 @@
 import { Lato } from "next/font/google";
-import { useEffect } from 'react';
+import { useEffect, useState} from 'react';
 import Head from "next/head"
-
+import { Tweet } from "../types/Tweet";
 import Header from "../components/header";
 import Navbar from "../components/navbar";
 import DisasterMap from "../components/disaster_map";
@@ -13,9 +13,9 @@ const lato = Lato({
 	subsets: ["latin"],
 	weight: ["100", "300", "400"]
 });
-
+useState
 export default function Home() {
-	let newTweets = [];
+	const [newTweets, setNewTweets] = useState<Tweet[]>([]);
 	useEffect(() => {
 		const setUpStream = async () => {
 			const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -30,7 +30,9 @@ export default function Home() {
 			//eventSource can have event listeners based on the type of event.
 			//Bydefault for message type of event it have the onmessage method which can be used directly or this same can be achieved through explicit eventlisteners
 			eventSource.addEventListener('newTweets', function (event) {
-				newTweets = JSON.parse(event.data);
+				let streamedTweets : Tweet[] = JSON.parse(event.data);
+				let tempNewTweets = streamedTweets.concat(newTweets);
+				setNewTweets(tempNewTweets);
 				console.log('new tweets:', newTweets);
 			});
 
@@ -70,9 +72,9 @@ export default function Home() {
 						rowGap: "25px",
 						width: "100%"}}>
 					<DisasterMap />
-					<DisasterList />
+					{/* <DisasterList /> */}
 				</div>
-				<Sidebar />
+				<Sidebar newPosts={newTweets}/>
 			</main>
 			<Footer />
 

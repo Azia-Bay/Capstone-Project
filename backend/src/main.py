@@ -12,6 +12,7 @@ from asyncio import sleep
 from predictor import DisasterPredictor, LSTMClassifier
 from multiprocessing import Process
 from datetime import datetime, timezone, timedelta
+import threading
 # use Celery for cron job in the future.
 app = FastAPI()
 
@@ -49,7 +50,8 @@ TABLES['non_disaster_data'] = (
 DB_NAME = "crisis_nlp_db"
 time.sleep(2)
 cnx = mysql.connector.connect(
-  host="db"
+  host="db",
+  autocommit=True
 )
 
 cursor = cnx.cursor()
@@ -87,77 +89,18 @@ for table_name in TABLES:
     else:
         print("OK")
 
+cursor_lock = threading.Lock()
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
 
 @app.get("/disaster-data")
-def get_all_data():
-    cursor.execute("SELECT * FROM disaster_data")
-    # gets data in this format [(tweet_id, tweet, model, latitude, longitude, timestamp)]
-    res = cursor.fetchall()
-    
-    data = []
-    for row in res:
-        temp = {}
-        temp["tweet_id"] = row[0]
-        temp["tweet"] = row[1]
-        temp["model"] = row[2]
-        temp["state"] = row[3]
-        temp["city"] = row[4]
-        temp["latitude"] = row[5]
-        temp["longitude"] = row[6]
-        temp["timestamp"] = row[7]
-        data.append(temp)
-    return data
-
-# called from the frontend
-# Example URL to CALL: http://localhost:8000/datetime?start="2025-03-31T15:15:00"&end="2025-03-31T15:16:00" 
-@app.get("/datetime")
-def get_data_time(start:str, end:str):
-    # start and end given in the following format "yyyy-mm-ddThr:min:sec"
-    query = f"SELECT * FROM disaster_data WHERE timestamp BETWEEN {start} AND {end}"
-    cursor.execute(query)
-
-    res = cursor.fetchall()
-    data = []
-    for row in res:
-        temp = {}
-        temp["tweet_id"] = row[0]
-        temp["tweet"] = row[1]
-        temp["model"] = row[2]
-        temp["state"] = row[3]
-        temp["city"] = row[4]
-        temp["latitude"] = row[5]
-        temp["longitude"] = row[6]
-        temp["timestamp"] = row[7]
-        data.append(temp)
-    return data
-
-@app.get("/nondisaster-data")
-def get_nondisaster_data():
-    cursor.execute("SELECT * FROM non_disaster_data")
-    # gets data in this format [(tweet_id, tweet, model, latitude, longitude, timestamp)]
-    res = cursor.fetchall()
-    
-    data = []
-    for row in res:
-        temp = {}
-        temp["tweet_id"] = row[0]
-        temp["tweet"] = row[1]
-        data.append(temp)
-    return data
-
-
-async def data_generator():
-    while(True):
-        tzinfo = timezone(timedelta(hours=-5))
-        start = (datetime.now() - timedelta(hours=0, minutes=1, seconds=1)).strftime('%Y-%m-%dT%H:%M:%S')
-        end = datetime.now(tzinfo).strftime('%Y-%m-%dT%H:%M:%S')
-        query = f"SELECT * FROM disaster_data WHERE timestamp BETWEEN \"{start}\" AND \"{end}\""
-        cursor.execute(query)
+def get_disaster_data():
+    with cursor_lock:
+        cursor.execute("SELECT * FROM disaster_data")
+        # gets data in this format [(tweet_id, tweet, model, latitude, longitude, timestamp)]
         res = cursor.fetchall()
-    
+        
         data = []
         for row in res:
             temp = {}
@@ -170,8 +113,93 @@ async def data_generator():
             temp["longitude"] = row[6]
             temp["timestamp"] = row[7]
             data.append(temp)
-        json_data = json.dumps(data)
-        yield f"event: newTweets\ndata: {json_data}\n\n"
+        return data
+
+@app.get("/descending-disaster-data")
+def get_descending_disaster_data():
+    with cursor_lock:
+        cursor.execute("SELECT * FROM disaster_data ORDER BY timestamp DESC")
+        # gets data in this format [(tweet_id, tweet, model, latitude, longitude, timestamp)]
+        res = cursor.fetchall()
+        
+        data = []
+        for row in res:
+            temp = {}
+            temp["tweet_id"] = row[0]
+            temp["tweet"] = row[1]
+            temp["model"] = row[2]
+            temp["state"] = row[3]
+            temp["city"] = row[4]
+            temp["latitude"] = row[5]
+            temp["longitude"] = row[6]
+            temp["timestamp"] = row[7]
+            data.append(temp)
+        return data
+
+# called from the frontend
+# Example URL to CALL: http://localhost:8000/datetime?start="2025-03-31T15:15:00"&end="2025-03-31T15:16:00" 
+@app.get("/datetime")
+def get_date_time(start:str, end:str):
+    # start and end given in the following format "yyyy-mm-ddThr:min:sec"
+    with cursor_lock:
+        query = f"SELECT * FROM disaster_data WHERE timestamp BETWEEN {start} AND {end}"
+        cursor.execute(query)
+
+        res = cursor.fetchall()
+        data = []
+        for row in res:
+            temp = {}
+            temp["tweet_id"] = row[0]
+            temp["tweet"] = row[1]
+            temp["model"] = row[2]
+            temp["state"] = row[3]
+            temp["city"] = row[4]
+            temp["latitude"] = row[5]
+            temp["longitude"] = row[6]
+            temp["timestamp"] = row[7]
+            data.append(temp)
+        return data
+
+@app.get("/nondisaster-data")
+def get_nondisaster_data():
+    with cursor_lock:
+        cursor.execute("SELECT * FROM non_disaster_data")
+        # gets data in this format [(tweet_id, tweet, model, latitude, longitude, timestamp)]
+        res = cursor.fetchall()
+        
+        data = []
+        for row in res:
+            temp = {}
+            temp["tweet_id"] = row[0]
+            temp["tweet"] = row[1]
+            data.append(temp)
+        return data
+
+
+async def data_generator():
+    while(True):
+        tzinfo = timezone(timedelta(hours=-5))
+        start = (datetime.now() - timedelta(hours=0, minutes=1, seconds=1)).strftime('%Y-%m-%dT%H:%M:%S')
+        end = datetime.now(tzinfo).strftime('%Y-%m-%dT%H:%M:%S')
+        query = f"SELECT * FROM disaster_data WHERE timestamp BETWEEN \"{start}\" AND \"{end}\""
+        with cursor_lock:
+            cursor.execute(query)
+            res = cursor.fetchall()
+        
+            data = []
+            for row in res:
+                temp = {}
+                temp["tweet_id"] = row[0]
+                temp["tweet"] = row[1]
+                temp["model"] = row[2]
+                temp["state"] = row[3]
+                temp["city"] = row[4]
+                temp["latitude"] = row[5]
+                temp["longitude"] = row[6]
+                temp["timestamp"] = row[7]
+                data.append(temp)
+            json_data = json.dumps(data)
+            yield f"event: newTweets\ndata: {json_data}\n\n"
         await sleep(60)
         
         
@@ -184,7 +212,7 @@ def start_data_processing():
     subprocess.run(["python", "./src/data_processing.py"])
 
 def start_server():
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run(app=app, host="0.0.0.0", port=8000, log_level="info")
 
 if __name__ == "__main__":
     data_process = Process(target=start_data_processing)

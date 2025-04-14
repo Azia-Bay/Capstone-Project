@@ -14,7 +14,8 @@ print("DATA PROCESSING IS RUNNING")
 
 DB_NAME = "crisis_nlp_db"
 cnx = mysql.connector.connect(
-  host="db"
+  host="db",
+  autocommit=True
 )
 
 cursor = cnx.cursor()
@@ -137,6 +138,8 @@ def tokenize(text):
 
 model = DisasterPredictor(model_dir="/app/src/disaster_model")
 real_time = RealTimeData()
+coordinates_cache = {}
+coordinates_cache[None] = (None, None)
 def data_generator():
     while(True):
         # get real time tweets
@@ -159,7 +162,12 @@ def data_generator():
             print(f"I get here {city} {state}")
             # if city is None:
             #     continue
-            coordinates = get_coordinates(location=city)
+            coordinates = () 
+            if city in coordinates_cache:
+                coordinates = coordinates_cache[city]
+            else:
+                coordinates = get_coordinates(location=city)
+                coordinates_cache[city] = coordinates
             latitude, longitude = coordinates[0], coordinates[1]
             if city == state:
                 city = None
@@ -193,8 +201,7 @@ def data_generator():
             non_disaster_query = "INSERT INTO `non_disaster_data` (tweet) VALUES " + non_disaster_query
             print(non_disaster_query)
             cursor.execute(non_disaster_query)
-        cnx.commit()
-        if max(len(non_disaster_query), len(disaster_query)) == 0:
+        if len(data) < 10:
             sleep(60)
         # json_data = json.dumps(return_data)
         # yield f"event: newTweets\ndata: {json_data}\n\n"    

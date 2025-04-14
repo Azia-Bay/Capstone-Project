@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-
+import axios from 'axios';
 import Papa from "papaparse";
+import { Tweet } from "../types/Tweet";
 
-export default function Sidebar() {
+export default function Sidebar({newPosts}) {
     const numVisiblePosts = 3;
 	const [posts, setPosts] = useState([]);
 
@@ -16,25 +17,42 @@ export default function Sidebar() {
     }
 
 	useEffect(() => {
-		fetch("/preprocessed_data_utf8.csv")
-		  .then(response => response.text())
-		  .then(csvData => {
-			Papa.parse(csvData, {
-			  delimiter: "\t", // Handle tab-separated format
-			  header: true,
-			  skipEmptyLines: true,
-			  complete: function (result) {
-				console.log("Parsed CSV Data:", result.data.slice(0, 10)); // Debugging
+        axios.get("http://localhost:8000/descending-disaster-data").then(res => {
+            let initPosts = [];
+            res.data.forEach((tweet) => {
+                initPosts.push(tweet.tweet);
+            })
+            setPosts(initPosts.splice(0, Math.min(initPosts.length, 50)));
+        })
+
+		// fetch("/preprocessed_data_utf8.csv")
+		//   .then(response => response.text())
+		//   .then(csvData => {
+		// 	Papa.parse(csvData, {
+		// 	  delimiter: "\t", // Handle tab-separated format
+		// 	  header: true,
+		// 	  skipEmptyLines: true,
+		// 	  complete: function (result) {
+		// 		console.log("Parsed CSV Data:", result.data.slice(0, 10)); // Debugging
 				
-				if (result.data.length > 0 && result.data[0]["text"]) {
-				  setPosts(result.data.map(row => row["text"])); // Store all posts
-				} else {
-				  console.warn("No valid posts found.");
-				}
-			  },
-			});
-		  });
+		// 		if (result.data.length > 0 && result.data[0]["text"]) {
+		// 		  setPosts(result.data.map(row => row["text"])); // Store all posts
+		// 		} else {
+		// 		  console.warn("No valid posts found.");
+		// 		}
+		// 	  },
+		// 	});
+		//   });
 	  }, []);
+
+    useEffect(() => {
+        let tempNewPosts = [];
+        newPosts.forEach((tweet : Tweet) => {
+            tempNewPosts.push(tweet.tweet);
+        })
+        let tempPosts = tempNewPosts.concat(posts);
+        setPosts(tempPosts.splice(0, Math.min(tempPosts.length, 50)));
+    }, [newPosts])
     
     return(
         <aside

@@ -11,7 +11,9 @@ COPY . .
 
 EXPOSE 3000
 
-RUN npm run build
 
+# DEV BUILD
 # CMD [ "npm", "run", "dev" ]
+# PRODUCTION BUILD
+RUN npm run build
 CMD ["npm", "run", "start"]
