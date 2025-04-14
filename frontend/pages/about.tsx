@@ -27,8 +27,7 @@ export default function About() {
     };
 
     var developers = [
-        new Developer("Azia Bay-Asen", "Team Leader", "https://www.linkedin.com/in/aziabay/"),
-        new Developer("Alex Miller", "Scrum Master", "https://www.linkedin.com/in/alexandra-miller-454b98251/"),
+        new Developer("Alex Miller", "Team Leader, Scrum Master", "https://www.linkedin.com/in/alexandra-miller-454b98251/"),
         new Developer("Abbas Khawaja", "Frontend Developer", "https://www.linkedin.com/in/abbas-khawaja/"),
         new Developer("Vikranth Chinnam", "Backend Developer", "https://www.linkedin.com/in/vikranth-chinnam-553a21256/"),
         new Developer("Akshay Nagarajan", "Data Scientist", "https://www.linkedin.com/in/akshay-nagarajan/")
@@ -98,8 +97,8 @@ export default function About() {
                                 maxWidth: "300px",
                                 padding: "15px"}}>
                             <img
-                                src={developer.img}
-                                alt="Developer profile picture"
+                                src={`/developers/${developer.name}.jpeg`}
+                                alt={`${developer.name} profile picture`}
                                 style={{
                                     borderRadius: "100%",
                                     maxHeight: "75px",
