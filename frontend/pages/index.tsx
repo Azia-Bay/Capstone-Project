@@ -21,7 +21,7 @@ export default function Home() {
 			const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 			await sleep(2000)
 			// Create EventSource for SSE endpoint
-			const eventSource = new EventSource('http://localhost:8000/stream');
+			const eventSource = new EventSource(`http://${process.env.NEXT_PUBLIC_BASE_URL}:8000/stream`);
 
 			eventSource.onopen = () => {
 				console.log('EventSource connected')

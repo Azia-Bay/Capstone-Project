@@ -17,7 +17,7 @@ export default function Sidebar({newPosts}) {
     }
 
 	useEffect(() => {
-        axios.get("http://localhost:8000/descending-disaster-data").then(res => {
+        axios.get(`http://${process.env.NEXT_PUBLIC_BASE_URL}:8000/descending-disaster-data`).then(res => {
             let initPosts = [];
             res.data.forEach((tweet) => {
                 initPosts.push(tweet.tweet);

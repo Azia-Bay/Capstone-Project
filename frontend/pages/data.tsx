@@ -68,7 +68,7 @@ export default function Data() {
 			try {
 				setLoading(true);
 				// Fetch all existing data from the disaster-data endpoint
-				const response = await axios.get('http://localhost:8000/disaster-data');
+				const response = await axios.get(`http://${process.env.NEXT_PUBLIC_BASE_URL}:8000/disaster-data`);
 				const mappedData = mapApiResponseToTweetData(response.data);
 				setData(mappedData);
 				setLoading(false);
@@ -100,7 +100,7 @@ export default function Data() {
 			eventSource.close();
 		}
 
-		const newEventSource = new EventSource('http://localhost:8000/stream');
+		const newEventSource = new EventSource(`http://${process.env.NEXT_PUBLIC_BASE_URL}:8000/stream`);
 		
 		newEventSource.addEventListener('newTweets', (event) => {
 			try {
