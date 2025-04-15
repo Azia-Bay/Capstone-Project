@@ -28,6 +28,12 @@ interface TweetData {
 	timestamp?: string;
 }
 
+interface PopupData {
+  isOpen: boolean;
+  title: string;
+  tweets: TweetData[];
+}
+
 const disasterLabels = [
 	"Earthquake",
 	"Flood",
@@ -41,11 +47,102 @@ const COLORS = ['#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#FF5733'];
 // Common words to filter out from word frequency analysis
 const COMMON_WORDS = ['the', 'and', 'for', 'this', 'that', 'with', 'you', 'was', 'are', 'not', 'have'];
 
+// Modal component to display tweets
+const TweetPopup = ({ data, onClose }: { data: PopupData, onClose: () => void }) => {
+  if (!data.isOpen) return null;
+  
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        width: '80%',
+        maxWidth: '800px',
+        maxHeight: '80vh',
+        padding: '20px',
+        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
+        overflowY: 'auto'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2>{data.title}</h2>
+          <button 
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer'
+            }}
+          >
+            &times;
+          </button>
+        </div>
+        
+        {data.tweets.length > 0 ? (
+          <div>
+            <p>Showing {data.tweets.length} tweets:</p>
+            <div style={{ 
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
+              {data.tweets.map((tweet, index) => (
+                <div 
+                  key={tweet.tweet_id || index} 
+                  style={{
+                    padding: '10px',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '4px',
+                    backgroundColor: '#f9f9f9'
+                  }}
+                >
+                  <p style={{ margin: '0 0 5px 0' }}>{tweet.tweet}</p>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    fontSize: '12px',
+                    color: '#666'
+                  }}>
+                    <span>
+                      {tweet.city && tweet.state ? `${tweet.city}, ${tweet.state}` : 'Location unknown'}
+                    </span>
+                    <span>
+                      {tweet.timestamp ? new Date(tweet.timestamp).toLocaleString() : 'Time unknown'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p>No tweets available for this selection.</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function Data() {
 	const [data, setData] = useState<TweetData[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
 	const [eventSource, setEventSource] = useState<EventSource | null>(null);
+	const [popupData, setPopupData] = useState<PopupData>({
+	  isOpen: false,
+	  title: '',
+	  tweets: []
+	});
 
 	// Map API response to our internal format
 	const mapApiResponseToTweetData = (apiResponse: any[]): TweetData[] => {
@@ -184,7 +281,7 @@ export default function Data() {
 		}));
 	};
 
-	// Calculate word frequency analysis (just for common words)
+	// Calculate word frequency analysis
 	const getWordFrequency = () => {
 		const wordCounts: Record<string, number> = {};
 		
@@ -317,6 +414,152 @@ export default function Data() {
 		}));
 	};
 
+  // Handler for pie chart clicks
+  const handlePieClick = (data: any, index: number) => {
+    const disasterType = index + 1; // Convert index to disaster type (1-5)
+    const disasterName = disasterLabels[index];
+    
+    // Filter tweets for this disaster type
+    const relevantTweets = data.filter((item: TweetData) => 
+      item.disasterType === disasterType
+    );
+    
+    setPopupData({
+      isOpen: true,
+      title: `${disasterName} Tweets`,
+      tweets: relevantTweets
+    });
+  };
+
+  // Handler for bar chart clicks
+  const handleBarClick = (data: any, index: number, chartType: string) => {
+    let title = '';
+    let relevantTweets: TweetData[] = [];
+    
+    if (chartType === 'length') {
+      // For tweet length chart
+      const disasterType = index + 1;
+      const disasterName = disasterLabels[index];
+      
+      relevantTweets = data.filter((item: TweetData) => 
+        item.disasterType === disasterType
+      );
+      
+      title = `${disasterName} Tweets`;
+    } 
+    else if (chartType === 'wordFrequency') {
+      // For word frequency chart
+      const word = data[index].word;
+      
+      relevantTweets = data.filter((item: TweetData) => 
+        item.tweet.toLowerCase().includes(word.toLowerCase())
+      );
+      
+      title = `Tweets containing "${word}"`;
+    }
+    else if (chartType === 'sentiment') {
+      // For sentiment analysis chart
+      const clickedValue = data.activeLabel; // This gets which stack was clicked
+      const disasterName = data[index].name;
+      const sentiment = data.dataKey;
+      
+      // Define lookup for sentiment words based on sentiment type
+      const sentimentKeywords: Record<string, string[]> = {
+        positive: ['safe', 'rescued', 'survived', 'helping', 'help', 'recovery', 'saved'],
+        negative: ['dead', 'death', 'died', 'destroyed', 'damage', 'scary', 'danger', 'emergency'],
+        neutral: []
+      };
+      
+      // Get the keywords for the clicked sentiment
+      const keywords = sentimentKeywords[sentiment] || [];
+      const disasterType = disasterLabels.indexOf(disasterName) + 1;
+      
+      // For neutral sentiment, show tweets that don't contain positive or negative keywords
+      if (sentiment === 'neutral') {
+        const allKeywords = [...sentimentKeywords.positive, ...sentimentKeywords.negative];
+        relevantTweets = data.filter((item: TweetData) => {
+          if (item.disasterType !== disasterType) return false;
+          
+          const tweetLower = item.tweet.toLowerCase();
+          return !allKeywords.some(word => tweetLower.includes(word));
+        });
+      } else {
+        // For positive or negative sentiment, filter by keywords
+        relevantTweets = data.filter((item: TweetData) => {
+          if (item.disasterType !== disasterType) return false;
+          
+          const tweetLower = item.tweet.toLowerCase();
+          return keywords.some(word => tweetLower.includes(word));
+        });
+      }
+      
+      title = `${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} ${disasterName} Tweets`;
+    }
+    
+    setPopupData({
+      isOpen: true,
+      title,
+      tweets: relevantTweets
+    });
+  };
+
+  // Handler for area chart clicks (timeline)
+  const handleAreaClick = (data: any) => {
+    if (!data || !data.activeLabel) return;
+    
+    const timeSlot = data.activeLabel;
+    const dataKey = data.activeTooltipIndex?.dataKey;
+    
+    let relevantTweets: TweetData[] = [];
+    let title = `Tweets from ${timeSlot}`;
+    
+    // Parse the time to match with tweet timestamps
+    const clickTime = new Date(timeSlot);
+    const hourStart = new Date(clickTime);
+    hourStart.setMinutes(0, 0, 0);
+    const hourEnd = new Date(hourStart);
+    hourEnd.setHours(hourStart.getHours() + 1);
+    
+    // If a specific disaster type was clicked, filter by that
+    if (dataKey && dataKey !== 'count') {
+      const disasterType = disasterLabels.findIndex(label => 
+        label.toLowerCase() === dataKey.toLowerCase()
+      ) + 1;
+      
+      relevantTweets = data.filter((item: TweetData) => {
+        if (!item.timestamp || item.disasterType !== disasterType) return false;
+        
+        const tweetTime = new Date(item.timestamp);
+        return tweetTime >= hourStart && tweetTime < hourEnd;
+      });
+      
+      title = `${dataKey.charAt(0).toUpperCase() + dataKey.slice(1)} Tweets from ${timeSlot}`;
+    } else {
+      // Otherwise show all tweets from that time period
+      relevantTweets = data.filter((item: TweetData) => {
+        if (!item.timestamp) return false;
+        
+        const tweetTime = new Date(item.timestamp);
+        return tweetTime >= hourStart && tweetTime < hourEnd;
+      });
+    }
+    
+    setPopupData({
+      isOpen: true,
+      title,
+      tweets: relevantTweets
+    });
+  };
+
+  // Close the popup
+  const closePopup = () => {
+    setPopupData({
+      isOpen: false,
+      title: '',
+      tweets: []
+    });
+  };
+
 	// Render data visualization content
 	const renderContent = () => {
 		if (loading && data.length === 0) {
@@ -383,6 +626,10 @@ export default function Data() {
 					{loading && <span>Listening for new tweets...</span>}
 				</div>
 
+        <p style={{ backgroundColor: '#f0f9ff', padding: '10px', borderRadius: '4px', borderLeft: '4px solid #0088FE' }}>
+          <strong>Pro Tip:</strong> Click on any chart segment to view the related tweets!
+        </p>
+
 				{/* Timeline Chart */}
 				<div style={{ 
 					width: '100%', 
@@ -395,7 +642,10 @@ export default function Data() {
 				}}>
 					<h2>Disaster Tweet Timeline</h2>
 					<ResponsiveContainer width="100%" height={300}>
-						<AreaChart data={timelineData}>
+						<AreaChart 
+              data={timelineData}
+              onClick={(chartData) => handleAreaClick(chartData)}
+            >
 							<CartesianGrid strokeDasharray="3 3" />
 							<XAxis dataKey="time" />
 							<YAxis label={{ value: 'Number of Tweets', angle: -90, position: 'insideLeft' }} />
@@ -436,13 +686,14 @@ export default function Data() {
 										outerRadius={100}
 										fill="#8884d8"
 										dataKey="value"
+                    onClick={(entry, index) => handlePieClick(data, index)}
 									>
 										{disasterDistribution.map((entry, index) => (
-											<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+											<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} style={{ cursor: 'pointer' }} />
 										))}
 									</Pie>
 									<Tooltip formatter={(value, name) => [`${value} tweets`, name]} />
-									<Legend />
+									<Legend onClick={(entry, index) => handlePieClick(data, index)} />
 								</PieChart>
 							</ResponsiveContainer>
 						) : (
@@ -469,7 +720,13 @@ export default function Data() {
 								<YAxis label={{ value: 'Characters', angle: -90, position: 'insideLeft' }} />
 								<Tooltip />
 								<Legend />
-								<Bar dataKey="length" fill="#8884d8" name="Avg. Characters" />
+								<Bar 
+                  dataKey="length" 
+                  fill="#8884d8" 
+                  name="Avg. Characters" 
+                  onClick={(entry, index) => handleBarClick(data, index, 'length')}
+                  style={{ cursor: 'pointer' }}
+                />
 							</BarChart>
 						</ResponsiveContainer>
 					</div>
@@ -488,13 +745,22 @@ export default function Data() {
 							Note: Common words like 'the', 'and', 'for', 'you', etc. have been filtered out
 						</p>
 						<ResponsiveContainer width="100%" height={260}>
-							<BarChart data={wordFrequencyData} layout="vertical">
+							<BarChart 
+                data={wordFrequencyData} 
+                layout="vertical"
+              >
 								<CartesianGrid strokeDasharray="3 3" />
 								<XAxis type="number" />
 								<YAxis dataKey="word" type="category" width={80} />
 								<Tooltip />
 								<Legend />
-								<Bar dataKey="count" fill="#82ca9d" name="Frequency" />
+								<Bar 
+                  dataKey="count" 
+                  fill="#82ca9d" 
+                  name="Frequency" 
+                  onClick={(entry, index) => handleBarClick(data, index, 'wordFrequency')}
+                  style={{ cursor: 'pointer' }}
+                />
 							</BarChart>
 						</ResponsiveContainer>
 					</div>
@@ -510,47 +776,22 @@ export default function Data() {
 					}}>
 						<h2>Tweet Sentiment by Disaster Type</h2>
 						<ResponsiveContainer width="100%" height={300}>
-							<BarChart data={sentimentData} layout="horizontal">
+							<BarChart 
+                data={sentimentData} 
+                layout="horizontal"
+                onClick={(chartData) => handleBarClick(data, chartData.activeTooltipIndex, 'sentiment')}
+              >
 								<CartesianGrid strokeDasharray="3 3" />
 								<XAxis dataKey="name" />
 								<YAxis />
 								<Tooltip />
 								<Legend />
-								<Bar dataKey="positive" stackId="a" fill="#82ca9d" name="Positive" />
-								<Bar dataKey="neutral" stackId="a" fill="#8884d8" name="Neutral" />
-								<Bar dataKey="negative" stackId="a" fill="#ff8042" name="Negative" />
+								<Bar dataKey="positive" stackId="a" fill="#82ca9d" name="Positive" style={{ cursor: 'pointer' }} />
+								<Bar dataKey="neutral" stackId="a" fill="#8884d8" name="Neutral" style={{ cursor: 'pointer' }} />
+								<Bar dataKey="negative" stackId="a" fill="#ff8042" name="Negative" style={{ cursor: 'pointer' }} />
 							</BarChart>
 						</ResponsiveContainer>
 					</div>
-
-					{/* Placeholder for Map Visualization
-					<div style={{ 
-						width: '500px', 
-						height: '400px', 
-						backgroundColor: 'white', 
-						borderRadius: '8px',
-						boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-						padding: '20px',
-						display: 'flex',
-						flexDirection: 'column',
-						justifyContent: 'center',
-						alignItems: 'center'
-					}}>
-						<h2>Geographic Distribution</h2>
-						<div style={{ 
-							width: '100%', 
-							height: '300px', 
-							backgroundColor: '#f5f5f5', 
-							display: 'flex', 
-							flexDirection: 'column',
-							justifyContent: 'center', 
-							alignItems: 'center',
-							borderRadius: '4px'
-						}}>
-							<p>Map visualization would appear here</p>
-							<p>Found {getLocationData().length} geotagged disaster tweets</p>
-						</div>
-					</div> */}
 
 					{/* Tweet Count by Disaster Type */}
 					<div style={{ 
@@ -569,11 +810,23 @@ export default function Data() {
 								<YAxis label={{ value: 'Number of Tweets', angle: -90, position: 'insideLeft' }} />
 								<Tooltip />
 								<Legend />
-								<Bar dataKey="value" fill="#FF8042" name="Tweet Count" />
+								<Bar 
+                  dataKey="value" 
+                  fill="#FF8042" 
+                  name="Tweet Count" 
+                  onClick={(entry, index) => handlePieClick(data, index)}
+                  style={{ cursor: 'pointer' }}
+                />
 							</BarChart>
 						</ResponsiveContainer>
 					</div>
 				</div>
+        
+        {/* Tweet Popup Component */}
+        <TweetPopup 
+          data={popupData} 
+          onClose={closePopup} 
+        />
 			</div>
 		);
 	};
