@@ -143,7 +143,12 @@ coordinates_cache[None] = (None, None)
 def data_generator():
     while(True):
         # get real time tweets
-        data = real_time.get_all()
+        data = []
+        try:
+            data = real_time.get_all()
+        except:
+            print("FAILED TO FETCH DATA FROM BLUESKY, GOING TO SLEEP FOR 5 MINUTES")
+            sleep(300)
         print(data)
         disaster_query = "" # INSERT INTO tbl_name (a,b,c) VALUES
         non_disaster_query = "" 
