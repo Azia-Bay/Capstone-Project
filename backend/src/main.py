@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from bluesky import RealTimeData
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
@@ -90,6 +90,13 @@ for table_name in TABLES:
         print("OK")
 
 cursor_lock = threading.Lock()
+
+@app.middleware("ping")
+async def ping_my_sql(request:Request, call_next):
+    cnx.ping(reconnect=True, attempts=2, delay=2)
+    response = await call_next(request)
+    return response
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}

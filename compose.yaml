@@ -11,7 +11,7 @@ services:
   db:
     image: mysql:9
     volumes: 
-      - ./data:/var/lib/mysql
+      - app-data:/var/lib/mysql
     restart: always
     user: mysql
     environment:
@@ -52,8 +52,8 @@ services:
   #   volumes:
   #     - ./cronjob/cron.log:/var/log/cron.log
     
-# volumes:
-#   app-data:
+volumes:
+  app-data:
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
 # start the database before your application. The `db-data` volume persists the

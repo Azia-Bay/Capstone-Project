@@ -205,6 +205,8 @@ def data_generator():
             # return_data.append({"tweet":tweet, "disaster":disaster, "state":state, "city":city, "latitude":latitude, "longitude":longitude})
             # append Value to query
         # make an insert call to database
+        # reconnect to DB if connection drops
+        cnx.ping(reconnect=True, attempts=2, delay=2)
         if disaster_query != "":
             disaster_query = disaster_query[:len(disaster_query)-2]
             disaster_query += ";"
