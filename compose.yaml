@@ -24,7 +24,7 @@ services:
     build: ./backend
     init: true
     ports:
-      - 80:8000
+      - 8000:8000
     volumes:
       - ./backend:/app:ro
     restart: always
@@ -36,9 +36,9 @@ services:
     build: 
       context: ./frontend
       args:
-        NEXT_PUBLIC_BASE_URL: localhost
+        NEXT_PUBLIC_BASE_URL: localhost:8000
     ports: 
-      - 443:3000
+      - 80:3000
     depends_on:
       - backend
     
