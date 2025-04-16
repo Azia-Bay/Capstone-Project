@@ -90,7 +90,7 @@ export default function DisasterMap() {
     }, {} as Record<string, string>);
 
     useEffect(() => {
-        axios.get(`http://${process.env.NEXT_PUBLIC_BASE_URL}:8000/disaster-data`)
+        axios.get(`http://${process.env.NEXT_PUBLIC_BASE_URL}/disaster-data`)
         .then((res) => res.data)
         .then((tweets: Tweet[]) => {
             const grouped: Record<string, Tweet[]> = {};
