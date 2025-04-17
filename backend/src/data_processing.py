@@ -182,6 +182,7 @@ def data_generator():
                     try:
                         coordinates = get_coordinates(location=city)
                         coordinates_cache[city] = coordinates
+                        break
                     except:
                         print("FAILED GEOPY, GOING TO SLEEP FOR 1 MINUTE")
                         sleep(60)
