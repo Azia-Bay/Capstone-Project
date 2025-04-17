@@ -93,9 +93,13 @@ cursor_lock = threading.Lock()
 
 @app.middleware("ping")
 async def ping_my_sql(request:Request, call_next):
-    cnx.ping(reconnect=True, attempts=2, delay=2)
-    response = await call_next(request)
-    return response
+    try:
+        response = await call_next(request)
+        return response
+    except:
+        cnx.ping(reconnect=True, attempts=2, delay=2)
+        response = await call_next(request)
+        return response
 
 @app.get("/")
 def read_root():

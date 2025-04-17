@@ -163,28 +163,36 @@ def data_generator():
                 non_disaster_query += f"('{tweet}'), "
                 continue
             city, state = (None, None)
+            nominatim_fail = 5
             while True:
+                if nominatim_fail <= 0:
+                    break
                 try:
                     city, state = locate_disaster(tweet, extract_locations(tweet))
                     break
                 except:
                     print("FAILED NOMINATIM, GOING TO SLEEP FOR 1 MINUTE")
+                    nominatim_fail -= 1
                     sleep(60)
             sleep(1)
             print(f"I get here {city} {state}")
             # if city is None:
             #     continue
             coordinates = () 
+            geopy_fail = 5
             if city in coordinates_cache:
                 coordinates = coordinates_cache[city]
             else:
                 while True:
+                    if geopy_fail <= 0:
+                        break
                     try:
                         coordinates = get_coordinates(location=city)
                         coordinates_cache[city] = coordinates
                         break
                     except:
                         print("FAILED GEOPY, GOING TO SLEEP FOR 1 MINUTE")
+                        geopy_fail -= 1
                         sleep(60)
             latitude, longitude = coordinates[0], coordinates[1]
             if city == state:
