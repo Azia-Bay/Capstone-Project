@@ -98,6 +98,9 @@ async def ping_my_sql(request:Request, call_next):
         return response
     except:
         cnx.ping(reconnect=True, attempts=2, delay=2)
+        cursor = cnx.cursor()
+        cursor.execute("USE {}".format(DB_NAME))
+        print("FAILED AT DB CONNECTION RECONNECT")
         response = await call_next(request)
         return response
 

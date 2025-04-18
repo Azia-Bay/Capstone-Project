@@ -149,18 +149,21 @@ def data_generator():
         except:
             print("FAILED TO FETCH DATA FROM BLUESKY, GOING TO SLEEP FOR 5 MINUTES")
             sleep(300)
-        print(data)
+        # print(data)
         disaster_query = "" # INSERT INTO tbl_name (a,b,c) VALUES
         non_disaster_query = "" 
         return_data = []
+        disaster_tweets = 0
+        nondisaster_tweets = 0
         for tweet in data:
             # Call Spacy Function to get location.
-            print(tweet)
+            # print(tweet)
             result = model.predict(tweet)
             disaster = result['predicted_class']
             tweet = tweet.replace("'", "\\'")
             if disaster == 0:
                 non_disaster_query += f"('{tweet}'), "
+                nondisaster_tweets += 1
                 continue
             city, state = (None, None)
             nominatim_fail = 5
@@ -175,7 +178,7 @@ def data_generator():
                     nominatim_fail -= 1
                     sleep(60)
             sleep(1)
-            print(f"I get here {city} {state}")
+            # print(f"I get here {city} {state}")
             # if city is None:
             #     continue
             coordinates = () 
@@ -209,8 +212,9 @@ def data_generator():
                 city = city.replace("\\", "")
             if state:
                 state = state.replace("\\", "")
-            print(tweet, latitude, longitude, city, state, disaster)
+            # print(tweet, latitude, longitude, city, state, disaster)
             disaster_query += f"('{tweet}', {disaster}, '{state}', '{city}', '{latitude}', '{longitude}'), "
+            disaster_tweets += 1
             # return_data.append({"tweet":tweet, "disaster":disaster, "state":state, "city":city, "latitude":latitude, "longitude":longitude})
             # append Value to query
         # make an insert call to database
@@ -220,17 +224,18 @@ def data_generator():
             disaster_query = disaster_query[:len(disaster_query)-2]
             disaster_query += ";"
             disaster_query = "INSERT INTO `disaster_data` (tweet, model, state, city, latitude, longitude) VALUES " + disaster_query
-            print(disaster_query)
+            # print(disaster_query)
             cursor.execute(disaster_query)
 
         if non_disaster_query != "":
             non_disaster_query = non_disaster_query[:len(non_disaster_query)-2]
             non_disaster_query += ";"
             non_disaster_query = "INSERT INTO `non_disaster_data` (tweet) VALUES " + non_disaster_query
-            print(non_disaster_query)
+            # print(non_disaster_query)
             cursor.execute(non_disaster_query)
         if len(data) < 10:
             sleep(60)
+        print(f"got {len(data)} tweets from BLUESKY, PROCESSED {nondisaster_tweets} NON DISASTER TWEETS AND {disaster_tweets} DISASTER TWEETS \n")
         # json_data = json.dumps(return_data)
         # yield f"event: newTweets\ndata: {json_data}\n\n"    
 
