@@ -198,7 +198,7 @@ def data_generator():
                         geopy_fail -= 1
                         sleep(60)
             latitude, longitude = coordinates[0], coordinates[1]
-            if city.upper() == state.upper():
+            if city and state and city.upper() == state.upper():
                 city = None
             if latitude is None or longitude is None:
                 continue
