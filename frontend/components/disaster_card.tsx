@@ -1,8 +1,36 @@
-export default function DisasterCard() {
-    var title: string = "Florida: Earthquake - February 2025";
-    var detected: string = "First detected: 02-07-2025 01:41:15 UTC";
-    var latest: string = "Latest: \"Hurricane Maria was devastating for both Puerto Rico and the Virgin Islands Of the combined 35 million people the vast majority of the island is without power cell service or potable water 58 of PRs 69 hospitals lack power or fuel\"";
+import { Tweet } from "../types/Tweet";
 
+interface DisasterCardProps {
+	tweet: {
+		state: string;
+		model: number;
+		tweet: string;
+		timestamp: string;
+	};
+}
+
+const disasterTypeMap: { [key: number]: string } = {
+    "1": "Earthquake",
+    "2": "Flood",
+    "3": "Hurricane",
+    "4": "Tornado",
+    "5": "Wildfire",
+};
+
+export default function DisasterCard({ tweet }: DisasterCardProps) {
+    if (tweet.state === "None" || !tweet.state) return null;
+    
+    const title = `${tweet.state}: ${disasterTypeMap[tweet.model] || "Unknown"} - ${new Date(
+        tweet.timestamp
+      ).toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      })}`;
+    
+      const detected = `First detected: ${new Date(tweet.timestamp).toUTCString()}`;
+    
+      const latest = `Latest: "${tweet.tweet}"`;
+    
     return (
         <div
             style={{

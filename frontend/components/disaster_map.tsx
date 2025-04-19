@@ -126,6 +126,17 @@ export default function DisasterMap() {
 
     const selectedTweets = selectedPath ? tweetsByState[selectedPath] || [] : [];
 
+    const today = new Date();
+    const todayTweets = selectedTweets.filter(tweet => {
+        const tweetDate = new Date(tweet.timestamp);
+        return (
+            tweetDate.getFullYear() === today.getFullYear() &&
+            tweetDate.getMonth() === today.getMonth() &&
+            tweetDate.getDate() === today.getDate()
+        );
+    });
+
+
     return (
         <div
             style={{
@@ -762,12 +773,12 @@ export default function DisasterMap() {
                         X
                         </button>
                         
-                        <h3 style={{ marginBottom: "10px", fontSize: "16px" }}>Tweets from {selectedPath}</h3>
-                        <Graph tweets={selectedTweets}/>
+                        <h3 style={{ marginBottom: "10px", fontSize: "16px" }}>Tweets from {selectedPath} (Today: {todayTweets.length})</h3>
+                        <Graph tweets={todayTweets}/>
 
-                        {selectedTweets.length > 0 ? (
+                        {todayTweets.length > 0 ? (
                         <ul style={{ maxHeight: "200px", overflowY: "scroll", padding: 0, listStyle: "none", marginTop: "10px" }}>
-                            {selectedTweets.slice(0, 5).map(tweet => (
+                            {todayTweets.slice(0, 5).map(tweet => (
                             <li key={tweet.tweet_id} style={{ marginBottom: "10px", fontSize: "12px", textAlign: "left" }}>
                                 <strong>
                                 {tweet.city && tweet.city !== "None" ? `${tweet.city},` : ""} {tweet.state}
@@ -778,13 +789,13 @@ export default function DisasterMap() {
                             ))}
                         </ul>
                         ) : (
-                        <p style={{ fontSize: "12px", marginTop: "10px" }}>No tweets available for this state.</p>
+                        <p style={{ fontSize: "12px", marginTop: "10px" }}>No tweets for today available for this state.</p>
                         )}
 
                     </div>
                 )}
             </div>
-            <div style={{ marginTop: "20px", textAlign: "center" }}>
+            {/*<div style={{ marginTop: "20px", textAlign: "center" }}>
                 <label style={{ marginRight: "10px" }}>
                     Start Date & Time:
                     <input
@@ -814,7 +825,7 @@ export default function DisasterMap() {
                     }}
                     />
                 </label>
-            </div>
+            </div>*/}
         </div>
     );
 }
