@@ -1,12 +1,7 @@
 import { Tweet } from "../types/Tweet";
 
 interface DisasterCardProps {
-	tweet: {
-		state: string;
-		model: number;
-		tweet: string;
-		timestamp: string;
-	};
+	tweet: Tweet;
 }
 
 const disasterTypeMap: { [key: number]: string } = {
@@ -20,7 +15,7 @@ const disasterTypeMap: { [key: number]: string } = {
 export default function DisasterCard({ tweet }: DisasterCardProps) {
     if (tweet.state === "None" || !tweet.state) return null;
     
-    const title = `${tweet.state}: ${disasterTypeMap[tweet.model] || "Unknown"} - ${new Date(
+    const title = `${tweet.city && tweet.city !== "None" ? `${tweet.city},` : ""} ${tweet.state}: ${disasterTypeMap[tweet.model] || "Unknown"} - ${new Date(
         tweet.timestamp
       ).toLocaleString("default", {
         month: "long",

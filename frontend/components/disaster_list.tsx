@@ -24,7 +24,7 @@ export default function DisasterList({ tweets }: DisasterListProps) {
 
 			const tweetDate = new Date(tweet.timestamp).toISOString().split("T")[0];
 			if (tweetDate === today) {
-				const key = `${tweet.state}-${tweet.model}`;
+				const key = `${tweet.city && tweet.city !== "None" ? `${tweet.city},` : ""} ${tweet.state}-${tweet.model}`;
 				if (
 					!latestByType[key] ||
 					new Date(tweet.timestamp) > new Date(latestByType[key].timestamp)
