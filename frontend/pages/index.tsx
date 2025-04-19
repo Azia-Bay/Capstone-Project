@@ -8,6 +8,7 @@ import DisasterMap from "../components/disaster_map";
 import DisasterList from "../components/disaster_list";
 import Sidebar from "../components/sidebar";
 import Footer from "../components/footer";
+import axios from "axios";
 
 const lato = Lato({
 	subsets: ["latin"],
@@ -15,6 +16,16 @@ const lato = Lato({
 });
 useState
 export default function Home() {
+	const [allTweets, setAllTweets] = useState<Tweet[]>([]);
+	useEffect(() => {
+		axios
+		  .get(`http://${process.env.NEXT_PUBLIC_BASE_URL}/disaster-data`)
+		  .then((res) => {
+			setAllTweets(res.data);
+		  })
+		  .catch((error) => console.error("Error fetching disaster data:", error));
+	  }, []);
+
 	const [newTweets, setNewTweets] = useState<Tweet[]>([]);
 	useEffect(() => {
 		const setUpStream = async () => {
@@ -44,7 +55,8 @@ export default function Home() {
 		}
 		setUpStream()
 	
-	}, []) 
+	}, [newTweets])
+	const allDisasterTweets = [...allTweets, ...newTweets]; 
 	
 	return (
 		<div
@@ -72,7 +84,7 @@ export default function Home() {
 						rowGap: "25px",
 						width: "100%"}}>
 					<DisasterMap />
-					{/* <DisasterList /> */}
+					{<DisasterList tweets={allDisasterTweets}/> }
 				</div>
 				<Sidebar newPosts={newTweets}/>
 			</main>
