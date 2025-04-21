@@ -703,7 +703,7 @@ export default function Data() {
 						)}
 					</div>
 
-					{/* Average Tweet Length Bar Chart */}
+					{/* Average Tweet Length Bar Chart
 					<div style={{ 
 						width: '500px', 
 						height: '400px', 
@@ -731,7 +731,7 @@ export default function Data() {
 						</ResponsiveContainer>
 					</div>
 
-					{/* Word Frequency Bar Chart with disclaimer */}
+					{/* Word Frequency Bar Chart with disclaimer /}
 					<div style={{ 
 						width: '500px', 
 						height: '400px', 
@@ -765,7 +765,7 @@ export default function Data() {
 						</ResponsiveContainer>
 					</div>
 
-					{/* Sentiment Analysis Graph */}
+					{/* Sentiment Analysis Graph /}
 					<div style={{ 
 						width: '500px', 
 						height: '400px', 
@@ -791,7 +791,7 @@ export default function Data() {
 								<Bar dataKey="negative" stackId="a" fill="#ff8042" name="Negative" style={{ cursor: 'pointer' }} />
 							</BarChart>
 						</ResponsiveContainer>
-					</div>
+					</div> */}
 
 					{/* Tweet Count by Disaster Type */}
 					<div style={{ 
