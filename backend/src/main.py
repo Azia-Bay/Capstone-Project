@@ -90,16 +90,17 @@ for table_name in TABLES:
         print("OK")
 
 cursor_lock = threading.Lock()
-
+cnx_lock = threading.Lock()
 @app.middleware("ping")
 async def ping_my_sql(request:Request, call_next):
     try:
         response = await call_next(request)
         return response
     except:
-        cnx.ping(reconnect=True, attempts=2, delay=2)
-        cursor = cnx.cursor()
-        cursor.execute("USE {}".format(DB_NAME))
+        with cnx_lock and cursor_lock:
+            cnx.ping(reconnect=True, attempts=2, delay=2)
+            cursor = cnx.cursor()
+            cursor.execute("USE {}".format(DB_NAME))
         print("FAILED AT DB CONNECTION RECONNECT")
         response = await call_next(request)
         return response
@@ -150,6 +151,27 @@ def get_descending_disaster_data():
             data.append(temp)
         return data
 
+@app.get("/descending-disaster-data/id")
+def get_latest_descending_disaster_data(tweet_id:str):
+    with cursor_lock:
+        query = f"SELECT * FROM disaster_data WHERE tweet_id > {tweet_id} ORDER BY timestamp DESC"
+        cursor.execute(query)
+        # gets data in this format [(tweet_id, tweet, model, latitude, longitude, timestamp)]
+        res = cursor.fetchall()
+        
+        data = []
+        for row in res:
+            temp = {}
+            temp["tweet_id"] = row[0]
+            temp["tweet"] = row[1]
+            temp["model"] = row[2]
+            temp["state"] = row[3]
+            temp["city"] = row[4]
+            temp["latitude"] = row[5]
+            temp["longitude"] = row[6]
+            temp["timestamp"] = row[7]
+            data.append(temp)
+        return data
 # called from the frontend
 # Example URL to CALL: http://localhost:8000/datetime?start="2025-03-31T15:15:00"&end="2025-03-31T15:16:00" 
 @app.get("/datetime")
@@ -196,24 +218,25 @@ async def data_generator():
         start = (datetime.now() - timedelta(hours=0, minutes=1, seconds=1)).strftime('%Y-%m-%dT%H:%M:%S')
         end = datetime.now(tzinfo).strftime('%Y-%m-%dT%H:%M:%S')
         query = f"SELECT * FROM disaster_data WHERE timestamp BETWEEN \"{start}\" AND \"{end}\""
+        res = []
         with cursor_lock:
             cursor.execute(query)
             res = cursor.fetchall()
         
-            data = []
-            for row in res:
-                temp = {}
-                temp["tweet_id"] = row[0]
-                temp["tweet"] = row[1]
-                temp["model"] = row[2]
-                temp["state"] = row[3]
-                temp["city"] = row[4]
-                temp["latitude"] = row[5]
-                temp["longitude"] = row[6]
-                temp["timestamp"] = row[7]
-                data.append(temp)
-            json_data = json.dumps(data)
-            yield f"event: newTweets\ndata: {json_data}\n\n"
+        data = []
+        for row in res:
+            temp = {}
+            temp["tweet_id"] = row[0]
+            temp["tweet"] = row[1]
+            temp["model"] = row[2]
+            temp["state"] = row[3]
+            temp["city"] = row[4]
+            temp["latitude"] = row[5]
+            temp["longitude"] = row[6]
+            temp["timestamp"] = row[7]
+            data.append(temp)
+        json_data = json.dumps(data)
+        yield f"event: newTweets\ndata: {json_data}\n\n"
         await sleep(60)
         
         

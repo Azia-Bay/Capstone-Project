@@ -9,6 +9,7 @@ import DisasterList from "../components/disaster_list";
 import Sidebar from "../components/sidebar";
 import Footer from "../components/footer";
 import axios from "axios";
+import { usePolling } from "../components/usePolling";
 
 const lato = Lato({
 	subsets: ["latin"],
@@ -17,46 +18,21 @@ const lato = Lato({
 useState
 export default function Home() {
 	const [allTweets, setAllTweets] = useState<Tweet[]>([]);
+	
+	usePolling(60000);
+
 	useEffect(() => {
 		axios
-		  .get(`http://${process.env.NEXT_PUBLIC_BASE_URL}/disaster-data`)
+		  .get(`http://${process.env.NEXT_PUBLIC_BASE_URL}/descending-disaster-data`)
 		  .then((res) => {
 			setAllTweets(res.data);
 		  })
 		  .catch((error) => console.error("Error fetching disaster data:", error));
-	  }, []);
+		
+	}, []);
 
 	const [newTweets, setNewTweets] = useState<Tweet[]>([]);
-	useEffect(() => {
-		const setUpStream = async () => {
-			const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-			await sleep(2000)
-			// Create EventSource for SSE endpoint
-			const eventSource = new EventSource(`http://${process.env.NEXT_PUBLIC_BASE_URL}/stream`);
-
-			eventSource.onopen = () => {
-				console.log('EventSource connected')
-			}
-
-			//eventSource can have event listeners based on the type of event.
-			//Bydefault for message type of event it have the onmessage method which can be used directly or this same can be achieved through explicit eventlisteners
-			eventSource.addEventListener('newTweets', function (event) {
-				let streamedTweets : Tweet[] = JSON.parse(event.data);
-				let tempNewTweets = streamedTweets.concat(newTweets);
-				setNewTweets(tempNewTweets);
-				console.log('new tweets:', newTweets);
-			});
-
-			//In case of any error, if eventSource is not closed explicitely then client will retry the connection a new call to backend will happen and the cycle will go on.
-			eventSource.onerror = (error) => {
-				console.error('EventSource failed', error)
-				eventSource.close()
-			}
-		}
-		setUpStream()
-	
-	}, [newTweets])
-	const allDisasterTweets = [...allTweets, ...newTweets]; 
+	// const allDisasterTweets = [...allTweets, ...newTweets]; 
 	
 	return (
 		<div
@@ -83,10 +59,10 @@ export default function Home() {
 						flexDirection: "column",
 						rowGap: "25px",
 						width: "100%"}}>
-					<DisasterMap />
-					{<DisasterList tweets={allDisasterTweets}/> }
+					<DisasterMap tweets={allTweets}/>
+					{<DisasterList tweets={allTweets}/> }
 				</div>
-				<Sidebar newPosts={newTweets}/>
+				<Sidebar newPosts={allTweets}/>
 			</main>
 			<Footer />
 
