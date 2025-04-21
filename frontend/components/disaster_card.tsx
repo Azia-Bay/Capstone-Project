@@ -22,7 +22,7 @@ export default function DisasterCard({ tweet }: DisasterCardProps) {
         year: "numeric",
       })}`;
     
-      const detected = `First detected: ${new Date(tweet.timestamp).toUTCString()}`;
+      const detected = `First detected: ${new Date(tweet.timestamp).toLocaleString()}`;
     
       const latest = `Latest: "${tweet.tweet}"`;
     
