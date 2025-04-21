@@ -15,36 +15,6 @@ export default function Sidebar({newPosts}) {
         setShowMorePopup(true);
         setMorePopupPageIndex(0);
     }
-
-	useEffect(() => {
-        axios.get(`http://${process.env.NEXT_PUBLIC_BASE_URL}/descending-disaster-data`).then(res => {
-            let initPosts = [];
-            res.data.forEach((tweet) => {
-                initPosts.push(tweet.tweet);
-            })
-            setPosts(initPosts.splice(0, Math.min(initPosts.length, 50)));
-        })
-
-		// fetch("/preprocessed_data_utf8.csv")
-		//   .then(response => response.text())
-		//   .then(csvData => {
-		// 	Papa.parse(csvData, {
-		// 	  delimiter: "\t", // Handle tab-separated format
-		// 	  header: true,
-		// 	  skipEmptyLines: true,
-		// 	  complete: function (result) {
-		// 		console.log("Parsed CSV Data:", result.data.slice(0, 10)); // Debugging
-				
-		// 		if (result.data.length > 0 && result.data[0]["text"]) {
-		// 		  setPosts(result.data.map(row => row["text"])); // Store all posts
-		// 		} else {
-		// 		  console.warn("No valid posts found.");
-		// 		}
-		// 	  },
-		// 	});
-		//   });
-	  }, []);
-
     useEffect(() => {
         let tempNewPosts = [];
         newPosts.forEach((tweet : Tweet) => {

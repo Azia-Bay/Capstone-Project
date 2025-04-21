@@ -4,7 +4,7 @@ import Graph from "../components/graph";
 import { Tweet } from "../types/Tweet";
 
 
-export default function DisasterMap() {    
+export default function DisasterMap({ tweets }) {    
     
     const [hoveredPath, setHoveredPath] = useState(null);
     const [selectedPath, setSelectedPath] = useState(null);
@@ -90,18 +90,25 @@ export default function DisasterMap() {
     }, {} as Record<string, string>);
 
     useEffect(() => {
-        axios.get(`http://${process.env.NEXT_PUBLIC_BASE_URL}/disaster-data`)
-        .then((res) => res.data)
-        .then((tweets: Tweet[]) => {
-            const grouped: Record<string, Tweet[]> = {};
-            tweets.forEach(tweet => {
-              const abbr = stateNameToAbbr[tweet.state] || tweet.state; // Convert full name to abbreviation, if possible
-              if (!grouped[abbr]) grouped[abbr] = [];
-              grouped[abbr].push(tweet);
-            });
-            setTweetsByState(grouped);
-          });
-      }, []);
+        // axios.get(`http://${process.env.NEXT_PUBLIC_BASE_URL}/disaster-data`)
+        // .then((res) => res.data)
+        // .then((tweets: Tweet[]) => {
+        //     const grouped: Record<string, Tweet[]> = {};
+        //     tweets.forEach(tweet => {
+        //       const abbr = stateNameToAbbr[tweet.state] || tweet.state; // Convert full name to abbreviation, if possible
+        //       if (!grouped[abbr]) grouped[abbr] = [];
+        //       grouped[abbr].push(tweet);
+        //     });
+        //     setTweetsByState(grouped);
+        //   });
+        const grouped: Record<string, Tweet[]> = {};
+        tweets.forEach(tweet => {
+        const abbr = stateNameToAbbr[tweet.state] || tweet.state; // Convert full name to abbreviation, if possible
+        if (!grouped[abbr]) grouped[abbr] = [];
+        grouped[abbr].push(tweet);
+        });
+        setTweetsByState(grouped);
+      }, [tweets]);
 
     const handleMouseEnter = (id: string) => {
         setHoveredPath(id);

@@ -39,3 +39,11 @@ http://localhost:8000
 # Frontend
 
 http://localhost
+
+Run this locally with
+
+installing docker and docker compose on machine
+
+Create data volume
+
+docker volume create app-data

@@ -10,6 +10,7 @@ import axios from 'axios';
 import Header from "../components/header";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
+import { usePolling } from '../components/usePolling';
 
 const lato = Lato({
 	subsets: ["latin"],
@@ -143,7 +144,6 @@ export default function Data() {
 	  title: '',
 	  tweets: []
 	});
-
 	// Map API response to our internal format
 	const mapApiResponseToTweetData = (apiResponse: any[]): TweetData[] => {
 		return apiResponse.map(item => ({
@@ -159,91 +159,29 @@ export default function Data() {
 		}));
 	};
 
+	usePolling(60000);
+	
 	useEffect(() => {
 		// Function to fetch initial tweets
 		const fetchTweets = async () => {
 			try {
 				setLoading(true);
 				// Fetch all existing data from the disaster-data endpoint
-				const response = await axios.get(`http://${process.env.NEXT_PUBLIC_BASE_URL}/disaster-data`);
+				const response = await axios.get(`http://${process.env.NEXT_PUBLIC_BASE_URL}/descending-disaster-data`);
 				const mappedData = mapApiResponseToTweetData(response.data);
 				setData(mappedData);
 				setLoading(false);
 				
-				// After initial data load, set up event source for real-time updates
-				setupEventSource();
 			} catch (err) {
 				console.error('Failed to fetch tweets:', err);
 				setError('Failed to fetch tweet data');
 				setLoading(false);
 			}
 		};
-		
-		// Start the initial fetch
+
 		fetchTweets();
-		
-		// Cleanup function
-		return () => {
-			if (eventSource) {
-				eventSource.close();
-			}
-		};
+		// Start the initial fetch
 	}, []);
-
-	// Set up event source for server-sent events
-	const setupEventSource = () => {
-		if (eventSource) {
-			// Close existing connection before creating a new one
-			eventSource.close();
-		}
-
-		const newEventSource = new EventSource(`http://${process.env.NEXT_PUBLIC_BASE_URL}/stream`);
-		
-		newEventSource.addEventListener('newTweets', (event) => {
-			try {
-				const newTweetsData = JSON.parse(event.data);
-				const mappedNewTweets = mapApiResponseToTweetData(newTweetsData);
-				
-				// Update state by appending new tweets
-				setData(prevData => {
-					// Avoid duplicate tweets by checking tweet_id
-					const uniqueNewTweets = mappedNewTweets.filter(
-						newTweet => !prevData.some(
-							existingTweet => 
-								existingTweet.tweet_id === newTweet.tweet_id
-						)
-					);
-					
-					return [...prevData, ...uniqueNewTweets];
-				});
-			} catch (err) {
-				console.error('Error processing event data:', err);
-			}
-		});
-		
-		newEventSource.onerror = (err) => {
-			console.error('EventSource error:', err);
-			newEventSource.close();
-			// Try to reconnect after a delay
-			setTimeout(setupEventSource, 5000);
-		};
-		
-		setEventSource(newEventSource);
-	};
-
-	// Function to manually refresh/force update data
-	const refreshData = () => {
-		// Close and reestablish the event source connection
-		setupEventSource();
-		
-		// Let the user know we're listening for new data
-		setLoading(true);
-		
-		// Set a timeout to switch loading state back off if no new data comes in
-		setTimeout(() => {
-			setLoading(false);
-		}, 3000);
-	};
 
 	// Calculate disaster type distribution
 	const getDisasterDistribution = () => {
@@ -576,7 +514,7 @@ export default function Data() {
 				<div style={{ padding: '20px' }}>
 					<h1>Data Analysis</h1>
 					<p style={{ color: 'red' }}>{error}</p>
-					<button 
+					{/* <button 
 						onClick={refreshData}
 						style={{
 							padding: '8px 16px',
@@ -588,7 +526,7 @@ export default function Data() {
 						}}
 					>
 						Try Again
-					</button>
+					</button> */}
 				</div>
 			);
 		}
@@ -609,7 +547,7 @@ export default function Data() {
 				<h1>Disaster Tweets Analysis</h1>
 				<p>Analyzing {disasterTweetCount} disaster tweets</p>
 				
-				<div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+				{/* <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
 					<button 
 						onClick={refreshData}
 						style={{
@@ -624,7 +562,7 @@ export default function Data() {
 						{loading ? 'Refreshing...' : 'Refresh Data'}
 					</button>
 					{loading && <span>Listening for new tweets...</span>}
-				</div>
+				</div> */}
 
         <p style={{ backgroundColor: '#f0f9ff', padding: '10px', borderRadius: '4px', borderLeft: '4px solid #0088FE' }}>
           <strong>Pro Tip:</strong> Click on any chart segment to view the related tweets!

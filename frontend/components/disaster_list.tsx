@@ -33,9 +33,11 @@ export default function DisasterList({ tweets }: DisasterListProps) {
 				}
 			}
 		});
-        console.log("Filtered tweets going into disasters:", Object.values(latestByType));
-
-		setDisasters(Object.values(latestByType));
+        
+        let tempDisasters = Object.values(latestByType);
+        tempDisasters = tempDisasters.splice(0, Math.min(tempDisasters.length, 20))
+		setDisasters(tempDisasters);
+        console.log("Filtered tweets going into disasters:", tempDisasters);
         console.log("useEffect triggered");
 	}, [tweets]);
 
