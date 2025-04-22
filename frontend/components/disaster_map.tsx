@@ -90,17 +90,6 @@ export default function DisasterMap({ tweets }) {
     }, {} as Record<string, string>);
 
     useEffect(() => {
-        // axios.get(`http://${process.env.NEXT_PUBLIC_BASE_URL}/disaster-data`)
-        // .then((res) => res.data)
-        // .then((tweets: Tweet[]) => {
-        //     const grouped: Record<string, Tweet[]> = {};
-        //     tweets.forEach(tweet => {
-        //       const abbr = stateNameToAbbr[tweet.state] || tweet.state; // Convert full name to abbreviation, if possible
-        //       if (!grouped[abbr]) grouped[abbr] = [];
-        //       grouped[abbr].push(tweet);
-        //     });
-        //     setTweetsByState(grouped);
-        //   });
         const grouped: Record<string, Tweet[]> = {};
         tweets.forEach(tweet => {
         const abbr = stateNameToAbbr[tweet.state] || tweet.state; // Convert full name to abbreviation, if possible

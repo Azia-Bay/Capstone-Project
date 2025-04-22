@@ -79,7 +79,7 @@ export default function Sidebar({newPosts}) {
                 </div>
             </div>
 
-            <div
+            {/* <div
                 style={{
                     display: "flex",
                     flexDirection: "column",
@@ -101,7 +101,7 @@ export default function Sidebar({newPosts}) {
                             textAlign: "center"}}>
                         Line graph here
                     </div>
-            </div>
+            </div> */}
 
             <div
                 style={{

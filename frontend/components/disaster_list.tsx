@@ -7,16 +7,19 @@ interface DisasterListProps {
 	tweets: Tweet[];
 }
 
-export default function DisasterList({ tweets }: DisasterListProps) {
+export default function DisasterList({ tweets }) {
+    const [posts, setPosts] = useState<Tweet[]>([]);
 	const [disasters, setDisasters] = useState<Tweet[]>([]);
 
     //useEffect(() => {setDisasters([null, null, null, null, null])}, []);
     useEffect(() => {
+        let tempPosts = tweets.concat(posts);
+        
 		const today = new Date().toISOString().split("T")[0];
 
 		// Keep only the latest tweet per (state, model) for today
 		const latestByType: { [key: string]: Tweet } = {};
-		tweets.forEach((tweet) => {
+		tempPosts.forEach((tweet) => {
             if (tweet.state === "None" || !tweet.state) {
                 console.log("Skipping tweet with state 'None' or empty state");
                 return;
@@ -33,7 +36,7 @@ export default function DisasterList({ tweets }: DisasterListProps) {
 				}
 			}
 		});
-        
+        setPosts(tempPosts);
         let tempDisasters = Object.values(latestByType);
         tempDisasters = tempDisasters.splice(0, Math.min(tempDisasters.length, 20))
 		setDisasters(tempDisasters);
