@@ -12,14 +12,14 @@ export default function DisasterMap({ tweets }) {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [tweetsByState, setTweetsByState] = useState<Record<string, Tweet[]>>({});;
-    const [popupPosition, setPopupPosition] = useState({ x: 0, y: 20 });
+    const [popupPosition, setPopupPosition] = useState({ x: 10, y: 20 });
     
     useEffect(() => {
         const updatePopupPosition = () => {
         const popupWidth = 310; // same as your maxWidth
-        const margin = 20;
+        const margin = 230;
     
-        const x = window.innerWidth - popupWidth;
+        const x = 10;
         const y = margin;
     
         setPopupPosition({ x, y });
