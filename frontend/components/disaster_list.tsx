@@ -13,19 +13,20 @@ export default function DisasterList({ tweets }) {
 
     //useEffect(() => {setDisasters([null, null, null, null, null])}, []);
     useEffect(() => {
-        let tempPosts = tweets.concat(posts);
-        
-		const today = new Date().toISOString().split("T")[0];
-
+        let curDay = new Date();
+        curDay.setTime(curDay.getTime() - (1000 * 60 * 60 * 5));
+		const today = curDay.toISOString().split("T")[0];
 		// Keep only the latest tweet per (state, model) for today
 		const latestByType: { [key: string]: Tweet } = {};
-		tempPosts.forEach((tweet) => {
+        for(const tweet of tweets){
             if (tweet.state === "None" || !tweet.state) {
                 console.log("Skipping tweet with state 'None' or empty state");
-                return;
+                continue;
             }
-
-			const tweetDate = new Date(tweet.timestamp).toISOString().split("T")[0];
+            let tweetTime = new Date(tweet.timestamp)
+            tweetTime.setTime(tweetTime.getTime() - (1000 * 60 * 60 * 5))
+			let tweetDate = tweetTime.toISOString().split("T")[0];
+            // console.log(tweetDate)
 			if (tweetDate === today) {
 				const key = `${tweet.city && tweet.city !== "None" ? `${tweet.city},` : ""} ${tweet.state}-${tweet.model}`;
 				if (
@@ -35,12 +36,14 @@ export default function DisasterList({ tweets }) {
 					latestByType[key] = tweet;
 				}
 			}
-		});
-        setPosts(tempPosts);
-        let tempDisasters = Object.values(latestByType);
-        tempDisasters = tempDisasters.splice(0, Math.min(tempDisasters.length, 20))
-		setDisasters(tempDisasters);
-        console.log("Filtered tweets going into disasters:", tempDisasters);
+            else{
+                break;
+            }
+		};
+        // let tempDisasters = Object.values(latestByType);
+        // tempDisasters = tempDisasters.splice(0, Math.min(tempDisasters.length, 20))
+		setDisasters(Object.values(latestByType));
+        console.log("Filtered tweets going into disasters:", Object.values(latestByType));
         console.log("useEffect triggered");
 	}, [tweets]);
 

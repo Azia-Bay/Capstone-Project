@@ -26,9 +26,14 @@ class RealTimeData:
         
         for query in search_queries:
             self.payload['q'] = query
-            res = requests.get('https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts', params=self.payload)
-            self.times[disaster_type] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            res = requests.get('https://api.bsky.app/xrpc/app.bsky.feed.searchPosts', params=self.payload)
+            time.sleep(1)
+            if res.status_code != 200:
+                continue
             res = res.json()
+            if len(res['posts']) > 0:
+                self.times[disaster_type] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            
             for post in res['posts']:
                 if post['uri'] not in visited:
                     postDetails = ""
@@ -75,7 +80,8 @@ class RealTimeData:
         return posts
 
 # test = RealTimeData()
-
+# data = test.get_all()
+# print(data)
 # with open('data.csv', 'w', newline='') as csvfile:
 #     spamwriter = csv.writer(csvfile)
 #     spamwriter.writerow(["Blusky Tweets"])

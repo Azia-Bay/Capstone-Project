@@ -8,12 +8,11 @@ import mysql.connector
 from mysql.connector import errorcode
 import subprocess
 import json
-from asyncio import sleep
+import asyncio
 from predictor import DisasterPredictor, LSTMClassifier
 from multiprocessing import Process
 from datetime import datetime, timezone, timedelta
 import threading
-# use Celery for cron job in the future.
 app = FastAPI()
 
 app.add_middleware(
@@ -90,20 +89,6 @@ for table_name in TABLES:
         print("OK")
 
 cursor_lock = threading.Lock()
-cnx_lock = threading.Lock()
-@app.middleware("ping")
-async def ping_my_sql(request:Request, call_next):
-    try:
-        response = await call_next(request)
-        return response
-    except:
-        with cnx_lock and cursor_lock:
-            cnx.ping(reconnect=True, attempts=2, delay=2)
-            cursor = cnx.cursor()
-            cursor.execute("USE {}".format(DB_NAME))
-        print("FAILED AT DB CONNECTION RECONNECT")
-        response = await call_next(request)
-        return response
 
 @app.get("/")
 def read_root():
@@ -237,7 +222,7 @@ async def data_generator():
             data.append(temp)
         json_data = json.dumps(data)
         yield f"event: newTweets\ndata: {json_data}\n\n"
-        await sleep(60)
+        await asyncio.sleep(60)
         
         
 
@@ -245,17 +230,43 @@ async def data_generator():
 async def stream():
     return StreamingResponse(data_generator(), media_type="text/event-stream")
 
+async def maintain(data_process, server_process):
+    await asyncio.sleep(3600 * 4)
+    print("MAINTAINENCE FOR FASTAPI SERVER AND DATA PROCESSING")
+    data_process.terminate()
+    server_process.terminate()
+    data_process.join()
+    server_process.join()
+    server_process = Process(target=start_server)
+    server_process.start()
+    data_process = Process(target=start_data_processing)
+    data_process.start()
+    return data_process, server_process
+
 def start_data_processing():
     subprocess.run(["python", "./src/data_processing.py"])
 
 def start_server():
+    global cnx, cursor
+    cursor.close()
+    cnx.close()
+    cnx = mysql.connector.connect(
+        host="db",
+        autocommit=True
+    )
+
+    cursor = cnx.cursor()
+    cursor.execute("USE {}".format(DB_NAME))
     uvicorn.run(app=app, host="0.0.0.0", port=8000, log_level="info")
 
 if __name__ == "__main__":
-    data_process = Process(target=start_data_processing)
     server_process = Process(target=start_server)
+    data_process = Process(target=start_data_processing)
     data_process.start()
     server_process.start()
 
-    server_process.join()
-    data_process.join()
+    while True:
+        data_process, server_process = asyncio.run(maintain(data_process=data_process, server_process=server_process))
+    
+    # server_process.join()
+    # data_process.join()

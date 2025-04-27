@@ -17,3 +17,4 @@ numpy==2.0.2
 shapely==2.1.0
 geopandas==1.0.1
 pydantic==1.10.11
+hf-xet==1.0.4

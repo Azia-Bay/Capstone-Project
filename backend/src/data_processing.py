@@ -146,7 +146,8 @@ def data_generator():
         data = []
         try:
             data = real_time.get_all()
-        except:
+        except Exception as e:
+            print(e)
             print("FAILED TO FETCH DATA FROM BLUESKY, GOING TO SLEEP FOR 5 MINUTES")
             sleep(300)
         # print(data)
@@ -160,8 +161,8 @@ def data_generator():
             # print(tweet)
             result = model.predict(tweet)
             disaster = result['predicted_class']
-            tweet = tweet.replace("'", "\\'")
             if disaster == 0:
+                tweet = tweet.replace("'", "")
                 non_disaster_query += f"('{tweet}'), "
                 nondisaster_tweets += 1
                 continue
@@ -212,6 +213,7 @@ def data_generator():
                 city = city.replace("\\", "")
             if state:
                 state = state.replace("\\", "")
+            tweet = tweet.replace("'", "")
             # print(tweet, latitude, longitude, city, state, disaster)
             disaster_query += f"('{tweet}', {disaster}, '{state}', '{city}', '{latitude}', '{longitude}'), "
             disaster_tweets += 1
