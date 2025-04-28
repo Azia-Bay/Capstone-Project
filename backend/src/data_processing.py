@@ -205,15 +205,14 @@ def data_generator():
                 continue
             if city:
                 city = city.replace("\\", "")
+                city = city.replace("'", "")
             if state:
                 state = state.replace("\\", "")
+                state = state.replace("'", "")
             # Call geopy library to get latitude and longitude
             # Call Model to classify the tweet
-            if city:
-                city = city.replace("\\", "")
-            if state:
-                state = state.replace("\\", "")
             tweet = tweet.replace("'", "")
+            
             # print(tweet, latitude, longitude, city, state, disaster)
             disaster_query += f"('{tweet}', {disaster}, '{state}', '{city}', '{latitude}', '{longitude}'), "
             disaster_tweets += 1
